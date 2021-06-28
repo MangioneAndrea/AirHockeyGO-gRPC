@@ -1,4 +1,4 @@
-module andrea.mangione.com/airHockeyGo/client
+module andrea.mangione.com/airhockey/client
 
 go 1.16
 

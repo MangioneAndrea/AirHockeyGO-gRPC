@@ -1,4 +1,4 @@
-module andrea.mangione.me/pong/server
+module andrea.mangione.com/airhockey/server
 
 go 1.16
 

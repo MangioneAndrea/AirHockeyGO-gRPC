@@ -1,6 +1,40 @@
 syntax = "proto3";
 
-package server;
-option go_package="server/positionpb";
+package positionpb;
+option go_package="/positionpb";
 
-service PositionService{}
+message Void{}
+
+message Vector2D{
+    int32 x=1;
+    int32 y=2;
+}
+
+message Token{
+    string playerHash=1;
+    string gameHash=2;
+}
+
+message Game{
+    string gameHash=1;
+    Token token1=2;
+    Token token2=3;
+    bool p1Ready=4;
+    bool p2Ready=5;
+}
+
+message UserInput{
+    Vector2D vector=1;
+    Token token=2;
+}
+
+message BoolResponse {
+    bool value=1;
+}
+
+
+service PositionService{
+    rpc RequestGame(Void) returns (stream Game){};
+
+    rpc UpdateStatus(stream UserInput) returns (BoolResponse) {};
+}

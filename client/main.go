@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"image"
 	"image/color"
 	_ "image/png"
 	"log"
 	"math"
 	"os"
+
+	"andrea.mangione.dev/airhockey/positionpb"
+	"google.golang.org/grpc"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -26,7 +30,8 @@ const (
 )
 
 type Game struct {
-	mode GameMode
+	mode  GameMode
+	token positionpb.Token
 }
 
 type Rectangle struct {
@@ -47,10 +52,11 @@ type Actor struct {
 }
 
 var (
-	ball    Actor
-	player1 Actor
-	player2 Actor
-	divider = Rectangle{x: 0, y: screenHeight/2 - 2, width: screenWidth, height: 4, color: color.White}
+	connection positionpb.PositionServiceClient
+	ball       Actor
+	player1    Actor
+	player2    Actor
+	divider    = Rectangle{x: 0, y: screenHeight/2 - 2, width: screenWidth, height: 4, color: color.White}
 )
 
 func (g *Game) Update() error {
@@ -62,6 +68,11 @@ func (g *Game) Update() error {
 	player1.rotation += 1 / delta
 	player1.x = int(math.Min((math.Max(float64(cursorX), 0)), screenWidth))
 	player1.y = int(math.Min((math.Max(float64(cursorY), float64(divider.y))), screenHeight))
+
+	connection.UpdateStatus(context.Background(), positionpb.UserInput{
+		Vector: &positionpb.Vector2D{X: int32(player1.x), Y: int32(player1.y)},
+		Token:  &g.token,
+	})
 	return nil
 }
 
@@ -88,6 +99,14 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
+	cc, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Could not connect: %v", err)
+	}
+	defer cc.Close()
+
+	connection = positionpb.NewPositionServiceClient(cc)
+
 	ball = Actor{image: getImageFromFilePath("gopher.png")}
 	ball.width = ball.image.Bounds().Size().X
 	ball.height = ball.image.Bounds().Size().Y

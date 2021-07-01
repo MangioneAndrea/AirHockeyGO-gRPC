@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	"andrea.mangione.dev/airhockey/positionpb"
+	"github.com/MangioneAndrea/airhockey/positionpb"
 	"google.golang.org/grpc"
 )
 

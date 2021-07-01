@@ -9,7 +9,7 @@ import (
 	"math"
 	"os"
 
-	"andrea.mangione.dev/airhockey/positionpb"
+	"github.com/MangioneAndrea/airhockey/positionpb"
 	"google.golang.org/grpc"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -52,11 +52,12 @@ type Actor struct {
 }
 
 var (
-	connection positionpb.PositionServiceClient
-	ball       Actor
-	player1    Actor
-	player2    Actor
-	divider    = Rectangle{x: 0, y: screenHeight/2 - 2, width: screenWidth, height: 4, color: color.White}
+	connection   positionpb.PositionServiceClient
+	updateStatus positionpb.PositionService_UpdateStatusClient
+	ball         Actor
+	player1      Actor
+	player2      Actor
+	divider      = Rectangle{x: 0, y: screenHeight/2 - 2, width: screenWidth, height: 4, color: color.White}
 )
 
 func (g *Game) Update() error {
@@ -69,10 +70,11 @@ func (g *Game) Update() error {
 	player1.x = int(math.Min((math.Max(float64(cursorX), 0)), screenWidth))
 	player1.y = int(math.Min((math.Max(float64(cursorY), float64(divider.y))), screenHeight))
 
-	connection.UpdateStatus(context.Background(), positionpb.UserInput{
+	updateStatus.Send(&positionpb.UserInput{
 		Vector: &positionpb.Vector2D{X: int32(player1.x), Y: int32(player1.y)},
 		Token:  &g.token,
 	})
+
 	return nil
 }
 
@@ -129,6 +131,10 @@ func main() {
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Animation (Ebiten Demo)")
+
+	stream, err := connection.UpdateStatus(context.Background())
+	updateStatus = stream
+
 	if err := ebiten.RunGame(&Game{mode: SinglePlayer}); err != nil {
 		log.Fatal(err)
 	}

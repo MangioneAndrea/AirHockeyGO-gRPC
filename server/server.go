@@ -5,23 +5,23 @@ import (
 	"log"
 	"net"
 
-	"github.com/MangioneAndrea/airhockey/positionpb"
+	"github.com/MangioneAndrea/airhockey/gamepb"
 	"google.golang.org/grpc"
 )
 
 type server struct {
-	games []*positionpb.Game
+	games []*gamepb.Game
 }
 
-func (this *server) CreateGame() positionpb.Game {
+func (this *server) CreateGame() gamepb.Game {
 	gh := generateId()
-	game := positionpb.Game{
+	game := gamepb.Game{
 		GameHash: gh,
-		Token1: &positionpb.Token{
+		Token1: &gamepb.Token{
 			PlayerHash: generateId(),
 			GameHash:   gh,
 		},
-		Token2: &positionpb.Token{
+		Token2: &gamepb.Token{
 			PlayerHash: generateId(),
 			GameHash:   gh,
 		},
@@ -43,8 +43,8 @@ func main() {
 
 	s := grpc.NewServer()
 
-	positionpb.RegisterPositionServiceServer(s, &server{
-		games: make([]*positionpb.Game, 0),
+	gamepb.RegisterPositionServiceServer(s, &server{
+		games: make([]*gamepb.Game, 0),
 	})
 
 	if err := s.Serve(lis); err != nil {
@@ -53,7 +53,7 @@ func main() {
 	fmt.Println(generateId())
 }
 
-func (this *server) RequestGame(v *positionpb.Void, stream positionpb.PositionService_RequestGameServer) error {
+func (this *server) RequestGame(v *gamepb.Void, stream gamepb.PositionService_RequestGameServer) error {
 
 	if this.games[len(this.games)-1].P2Ready {
 		this.CreateGame()
@@ -64,7 +64,7 @@ func (this *server) RequestGame(v *positionpb.Void, stream positionpb.PositionSe
 	return nil
 }
 
-func (*server) UpdateStatus(stream positionpb.PositionService_UpdateStatusServer) error {
+func (*server) UpdateStatus(stream gamepb.PositionService_UpdateStatusServer) error {
 	msg, err := stream.Recv()
 	if err != nil {
 		return err

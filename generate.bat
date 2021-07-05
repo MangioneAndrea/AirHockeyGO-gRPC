@@ -1,7 +1,8 @@
 echo off
-echo ---------------------- protocol buffers --------------------------
-protoc .\positionpb\position.proto --go_out=plugins=grpc:.
-echo -------------------------- server --------------------------------
+go mod vendor
+echo - protocol buffers -
+protoc .\gamepb\gamepb.proto --go_out=plugins=grpc:.
+echo - server -
 go build .\server\
-echo -------------------------- client --------------------------------
+echo - client -
 go build .\client\

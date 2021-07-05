@@ -28,13 +28,16 @@ message UserInput{
     Token token=2;
 }
 
-message BoolResponse {
-    bool value=1;
+message GameStatus{
+    Vector2D player1=1;
+    Vector2D player2=2;
+    Vector2D disk=3;
+    Vector2D diskDirection=4;
 }
 
 
 service PositionService{
     rpc RequestGame(Void) returns (stream Game){};
 
-    rpc UpdateStatus(stream UserInput) returns (BoolResponse) {};
+    rpc UpdateStatus(stream UserInput) returns (stream GameStatus) {};
 }

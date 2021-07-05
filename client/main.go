@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 	"math"
 
@@ -17,8 +16,7 @@ const (
 )
 
 var (
-	connection   gamepb.PositionServiceClient
-	updateStatus gamepb.PositionService_UpdateStatusClient
+	connection gamepb.PositionServiceClient
 )
 
 type Actor interface {
@@ -45,11 +43,6 @@ func (g *GUI) Update() error {
 	player1.Rotation += 1 / delta
 	player1.X = int(math.Min((math.Max(float64(cursorX), 0)), screenWidth))
 	player1.Y = int(math.Min((math.Max(float64(cursorY), float64(divider.Y))), screenHeight))
-
-	updateStatus.Send(&gamepb.UserInput{
-		Vector: &gamepb.Vector2D{X: int32(player1.X), Y: int32(player1.Y)},
-		Token:  nil,
-	})
 
 	if err := g.stage.Tick(); err != nil {
 		println(err.Error())
@@ -81,12 +74,6 @@ func main() {
 	defer cc.Close()
 
 	connection = gamepb.NewPositionServiceClient(cc)
-
-	stream, streamErr := connection.UpdateStatus(context.Background())
-	updateStatus = stream
-	if streamErr != nil {
-		log.Fatal(streamErr)
-	}
 
 	g := &GUI{}
 	g.ChangeStage(&MainMenu{})

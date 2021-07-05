@@ -23,7 +23,6 @@ func (g *MainMenu) Draw(screen *ebiten.Image) {
 }
 
 func (g *MainMenu) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error {
-	print("construction")
 	buttonImage, err := GetImageFromFilePath("client/graphics/button/idle.png")
 	if err != nil {
 		log.Fatal(err)

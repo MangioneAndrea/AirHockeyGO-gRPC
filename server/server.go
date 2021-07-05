@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
 
@@ -65,10 +66,17 @@ func (this *server) RequestGame(v *gamepb.Void, stream gamepb.PositionService_Re
 }
 
 func (*server) UpdateStatus(stream gamepb.PositionService_UpdateStatusServer) error {
-	msg, err := stream.Recv()
-	if err != nil {
-		return err
+	for {
+		msg, err := stream.Recv()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			println(err)
+			return err
+		}
+		fmt.Printf("player position: %v | %v\n", msg.Vector.X, msg.Vector.Y)
+		stream.Send(&gamepb.GameStatus{Player1: msg.Vector})
 	}
-	stream.SendMsg(msg)
 	return nil
 }

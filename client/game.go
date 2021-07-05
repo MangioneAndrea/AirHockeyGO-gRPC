@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"image/color"
+	"io"
 	"log"
 	"math"
 
 	"github.com/MangioneAndrea/airhockey/gamepb"
-	"google.golang.org/grpc"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -20,10 +21,11 @@ const (
 )
 
 var (
-	ball    Sprite
-	player1 Sprite
-	player2 Sprite
-	divider = Rectangle{X: 0, Y: screenHeight/2 - 2, Width: screenWidth, Height: 4, Color: color.White}
+	ball         Sprite
+	player1      Sprite
+	player2      Sprite
+	divider      = Rectangle{X: 0, Y: screenHeight/2 - 2, Width: screenWidth, Height: 4, Color: color.White}
+	updateStatus gamepb.PositionService_UpdateStatusClient
 )
 
 type Game struct {
@@ -39,10 +41,14 @@ func (g *Game) Tick() error {
 	player1.X = int(math.Min((math.Max(float64(cursorX), 0)), screenWidth))
 	player1.Y = int(math.Min((math.Max(float64(cursorY), float64(divider.Y))), screenHeight))
 
-	updateStatus.Send(&gamepb.UserInput{
+	err := updateStatus.Send(&gamepb.UserInput{
 		Vector: &gamepb.Vector2D{X: int32(player1.X), Y: int32(player1.Y)},
 		//Token:  &g.token,
 	})
+
+	if err != nil {
+		fmt.Printf("Error while sending %v\n", err)
+	}
 
 	return nil
 }
@@ -54,13 +60,26 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error {
-	cc, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("Could not connect: %v", err)
-	}
-	defer cc.Close()
 
-	connection = gamepb.NewPositionServiceClient(cc)
+	stream, streamErr := connection.UpdateStatus(context.Background())
+	if streamErr != nil {
+		log.Fatal(streamErr)
+	}
+	updateStatus = stream
+
+	go func() {
+		for {
+			res, err := stream.Recv()
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				log.Fatalf("Error while receiving %v", err)
+			}
+			fmt.Printf("%v - %v \n", res.Player1.X, res.Player1.Y)
+		}
+	}()
+
 	goo, _ := GetImageFromFilePath("client/graphics/gopher.png")
 
 	ball = Sprite{Image: goo}
@@ -85,7 +104,5 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Animation (Ebiten Demo)")
 
-	stream, err := connection.UpdateStatus(context.Background())
-	updateStatus = stream
 	return nil
 }

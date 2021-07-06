@@ -3,3 +3,4 @@
 *.exe~
 go.sum
 vendor
+*.pb.go

@@ -1,4 +1,5 @@
 .dccache
 *.exe
+*.exe~
 go.sum
 vendor

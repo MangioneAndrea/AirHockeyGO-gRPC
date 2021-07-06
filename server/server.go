@@ -83,11 +83,11 @@ func (server *Server) UpdateStatus(stream gamepb.PositionService_UpdateStatusSer
 		game := server.games[msg.Token.GameHash]
 		if game != nil {
 			if msg.Token.PlayerHash == game.Token1.PlayerHash {
-				game.GameStatus.Player1.X = msg.Vector.X
-				game.GameStatus.Player1.Y = msg.Vector.Y
+				game.GameStatus.Player1.X = 600 - msg.Vector.X
+				game.GameStatus.Player1.Y = 1200 - msg.Vector.Y
 			} else if msg.Token.PlayerHash == game.Token2.PlayerHash {
-				game.GameStatus.Player2.X = msg.Vector.X
-				game.GameStatus.Player2.Y = msg.Vector.Y
+				game.GameStatus.Player2.X = 600 - msg.Vector.X
+				game.GameStatus.Player2.Y = 1200 - msg.Vector.Y
 			}
 			stream.Send(game)
 		}

@@ -12,3 +12,11 @@ func generateId() string {
 
 	return fmt.Sprint(seededRand.Int())
 }
+
+const DEBUG = true
+
+func printDebug(msg string, props ...interface{}) {
+	if DEBUG {
+		fmt.Printf(msg, props...)
+	}
+}

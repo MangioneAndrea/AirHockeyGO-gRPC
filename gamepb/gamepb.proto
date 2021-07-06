@@ -23,6 +23,7 @@ message Game{
     Token token1=2;
     Token token2=3;
     GameStatus gameStatus=4;
+    int64 lastUpdate=5;
 }
 
 message UserInput{

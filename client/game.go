@@ -84,7 +84,6 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 				opponent.X = int(res.GameStatus.Player1.X)
 				opponent.Y = int(res.GameStatus.Player1.Y)
 			}
-			//fmt.Printf("%v - %v \n", res.Player1.X, res.Player1.Y)
 		}
 	}()
 
@@ -110,7 +109,7 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 	opponent.Y = opponent.Height + 25
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("Animation (Ebiten Demo)")
+	ebiten.SetWindowTitle("Airhockey go!")
 
 	return nil
 }

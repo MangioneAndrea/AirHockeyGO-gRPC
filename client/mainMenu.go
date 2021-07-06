@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"log"
 
+	"github.com/MangioneAndrea/airhockey/gamepb"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -28,7 +30,14 @@ func (g *MainMenu) OnConstruction(screenWidth int, screenHeight int, gui *GUI) e
 		log.Fatal(err)
 	}
 	button = &Button{
-		X: screenWidth / 2, Y: screenHeight / 2, Image: buttonImage, OnClick: func() { gui.ChangeStage(&Game{}) },
+		X: screenWidth / 2, Y: screenHeight / 2, Image: buttonImage, OnClick: func() {
+			token, err := connection.RequestGame(context.Background(), &gamepb.GameRequest{})
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			gui.ChangeStage(&Game{token})
+		},
 	}
 	return nil
 }

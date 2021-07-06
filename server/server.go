@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -10,11 +11,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-type server struct {
-	games []*gamepb.Game
+type Server struct {
+	games      map[string]*gamepb.Game
+	emptyGames []*gamepb.Game
 }
 
-func (this *server) CreateGame() gamepb.Game {
+func (server *Server) CreateGame() *gamepb.Game {
 	gh := generateId()
 	game := gamepb.Game{
 		GameHash: gh,
@@ -22,15 +24,14 @@ func (this *server) CreateGame() gamepb.Game {
 			PlayerHash: generateId(),
 			GameHash:   gh,
 		},
-		Token2: &gamepb.Token{
-			PlayerHash: generateId(),
-			GameHash:   gh,
+		GameStatus: &gamepb.GameStatus{
+			Player1: &gamepb.Vector2D{X: 0, Y: 0},
+			Player2: &gamepb.Vector2D{X: 0, Y: 0},
 		},
-		P1Ready: false,
-		P2Ready: false,
 	}
-	this.games = append(this.games, &game)
-	return game
+	server.emptyGames = append(server.emptyGames, &game)
+	server.games[gh] = &game
+	return &game
 }
 
 func main() {
@@ -44,39 +45,52 @@ func main() {
 
 	s := grpc.NewServer()
 
-	gamepb.RegisterPositionServiceServer(s, &server{
-		games: make([]*gamepb.Game, 0),
+	gamepb.RegisterPositionServiceServer(s, &Server{
+		games: make(map[string]*gamepb.Game),
 	})
 
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
-	fmt.Println(generateId())
 }
 
-func (this *server) RequestGame(v *gamepb.Void, stream gamepb.PositionService_RequestGameServer) error {
-
-	if this.games[len(this.games)-1].P2Ready {
-		this.CreateGame()
+func (server *Server) RequestGame(ctx context.Context, v *gamepb.GameRequest) (*gamepb.Token, error) {
+	if len(server.emptyGames) > 0 {
+		game := server.emptyGames[0]
+		server.emptyGames = server.emptyGames[1:]
+		game.Token2 = &gamepb.Token{
+			PlayerHash: generateId(),
+			GameHash:   game.GameHash,
+		}
+		return game.Token2, nil
+	} else {
+		return server.CreateGame().Token1, nil
 	}
-
-	stream.Send(this.games[len(this.games)-1])
-
-	return nil
 }
 
-func (*server) UpdateStatus(stream gamepb.PositionService_UpdateStatusServer) error {
+func (server *Server) UpdateStatus(stream gamepb.PositionService_UpdateStatusServer) error {
 	for {
 		msg, err := stream.Recv()
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
-			println(err)
 			return err
 		}
-		fmt.Printf("player position: %v | %v\n", msg.Vector.X, msg.Vector.Y)
-		stream.Send(&gamepb.GameStatus{Player1: msg.Vector})
+		if msg.Token == nil {
+			continue
+		}
+		game := server.games[msg.Token.GameHash]
+		if game != nil {
+			if msg.Token.PlayerHash == game.Token1.PlayerHash {
+				game.GameStatus.Player1.X = msg.Vector.X
+				game.GameStatus.Player1.Y = msg.Vector.Y
+			} else if msg.Token.PlayerHash == game.Token2.PlayerHash {
+				game.GameStatus.Player2.X = msg.Vector.X
+				game.GameStatus.Player2.Y = msg.Vector.Y
+			}
+			stream.Send(game)
+		}
 	}
 	return nil
 }

@@ -82,7 +82,7 @@ func (button *Button) CheckClicked() {
 }
 
 func (button *Button) ContainsPoint(point image.Point) bool {
-	r := button.Image.Bounds().Add(image.Point{button.X, button.Y})
+	r := button.Image.Bounds().Add(image.Point{int(button.X), int(button.Y)})
 	return point.X >= r.Min.X && point.X <= r.Max.X && point.Y >= r.Min.Y && point.Y <= r.Max.Y
 }
 

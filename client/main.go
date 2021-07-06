@@ -40,9 +40,9 @@ func (g *GUI) Update() error {
 	if delta == 0 {
 		return nil
 	}
-	player1.Rotation += 1 / delta
-	player1.X = int(math.Min((math.Max(float64(cursorX), 0)), screenWidth))
-	player1.Y = int(math.Min((math.Max(float64(cursorY), float64(divider.Y))), screenHeight))
+	player.Rotation += 1 / delta
+	player.X = int(math.Min((math.Max(float64(cursorX), 0)), screenWidth))
+	player.Y = int(math.Min((math.Max(float64(cursorY), float64(divider.Y))), screenHeight))
 
 	if err := g.stage.Tick(); err != nil {
 		println(err.Error())

@@ -3,7 +3,10 @@ syntax = "proto3";
 package gamepb;
 option go_package="/gamepb";
 
-message Void{}
+message GameRequest{
+    string ip=1;
+    string gameHash=2;
+}
 
 message Vector2D{
     int32 x=1;
@@ -19,8 +22,7 @@ message Game{
     string gameHash=1;
     Token token1=2;
     Token token2=3;
-    bool p1Ready=4;
-    bool p2Ready=5;
+    GameStatus gameStatus=4;
 }
 
 message UserInput{
@@ -37,7 +39,7 @@ message GameStatus{
 
 
 service PositionService{
-    rpc RequestGame(Void) returns (stream Game){};
+    rpc RequestGame(GameRequest) returns (Token){};
 
-    rpc UpdateStatus(stream UserInput) returns (stream GameStatus) {};
+    rpc UpdateStatus(stream UserInput) returns (stream Game) {};
 }

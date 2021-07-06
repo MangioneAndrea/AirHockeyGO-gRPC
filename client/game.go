@@ -22,13 +22,14 @@ const (
 
 var (
 	ball         Sprite
-	player1      Sprite
-	player2      Sprite
+	player       Sprite
+	opponent     Sprite
 	divider      = Rectangle{X: 0, Y: screenHeight/2 - 2, Width: screenWidth, Height: 4, Color: color.White}
 	updateStatus gamepb.PositionService_UpdateStatusClient
 )
 
 type Game struct {
+	token *gamepb.Token
 }
 
 func (g *Game) Tick() error {
@@ -37,13 +38,13 @@ func (g *Game) Tick() error {
 	if delta == 0 {
 		return nil
 	}
-	player1.Rotation += 1 / delta
-	player1.X = int(math.Min((math.Max(float64(cursorX), 0)), screenWidth))
-	player1.Y = int(math.Min((math.Max(float64(cursorY), float64(divider.Y))), screenHeight))
+	player.Rotation += 1 / delta
+	player.X = int(math.Min((math.Max(float64(cursorX), 0)), screenWidth))
+	player.Y = int(math.Min((math.Max(float64(cursorY), float64(divider.Y))), screenHeight))
 
 	err := updateStatus.Send(&gamepb.UserInput{
-		Vector: &gamepb.Vector2D{X: int32(player1.X), Y: int32(player1.Y)},
-		//Token:  &g.token,
+		Vector: &gamepb.Vector2D{X: int32(player.X), Y: int32(player.Y)},
+		Token:  g.token,
 	})
 
 	if err != nil {
@@ -54,8 +55,8 @@ func (g *Game) Tick() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	player1.Draw(screen)
-	player2.Draw(screen)
+	player.Draw(screen)
+	opponent.Draw(screen)
 	divider.Draw(screen)
 }
 
@@ -76,7 +77,14 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 				}
 				log.Fatalf("Error while receiving %v", err)
 			}
-			fmt.Printf("%v - %v \n", res.Player1.X, res.Player1.Y)
+			if res.Token1.PlayerHash == g.token.PlayerHash {
+				opponent.X = int(res.GameStatus.Player2.X)
+				opponent.Y = int(res.GameStatus.Player2.Y)
+			} else {
+				opponent.X = int(res.GameStatus.Player1.X)
+				opponent.Y = int(res.GameStatus.Player1.Y)
+			}
+			//fmt.Printf("%v - %v \n", res.Player1.X, res.Player1.Y)
 		}
 	}()
 
@@ -86,20 +94,20 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 	ball.Width = ball.Image.Bounds().Size().X
 	ball.Height = ball.Image.Bounds().Size().Y
 
-	player1 = Sprite{
+	player = Sprite{
 		Image: goo,
 	}
-	player1.Width = ball.Image.Bounds().Size().X
-	player1.Height = ball.Image.Bounds().Size().Y
-	player1.X = screenWidth / 2
-	player1.Y = screenHeight - player1.Height - 25
-	player2 = Sprite{
+	player.Width = ball.Image.Bounds().Size().X
+	player.Height = ball.Image.Bounds().Size().Y
+	player.X = screenWidth / 2
+	player.Y = screenHeight - player.Height - 25
+	opponent = Sprite{
 		Image: goo,
 	}
-	player2.Width = ball.Image.Bounds().Size().X
-	player2.Height = ball.Image.Bounds().Size().Y
-	player2.X = screenWidth / 2
-	player2.Y = player2.Height + 25
+	opponent.Width = ball.Image.Bounds().Size().X
+	opponent.Height = ball.Image.Bounds().Size().Y
+	opponent.X = screenWidth / 2
+	opponent.Y = opponent.Height + 25
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Animation (Ebiten Demo)")

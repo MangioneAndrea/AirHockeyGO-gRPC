@@ -24,37 +24,40 @@ type Intersectable interface {
 }
 
 type Rectangle struct {
-	X      int
-	Y      int
-	Width  int
-	Height int
-	Color  color.Color
+	Position Vector2D
+	Width    int
+	Height   int
+	Color    color.Color
 }
 
 func (rect *Rectangle) Draw(screen *ebiten.Image) {
-	ebitenutil.DrawRect(screen, float64(rect.X), float64(rect.Y), float64(rect.Width), float64(rect.Height), rect.Color)
+	ebitenutil.DrawRect(screen, float64(rect.Position.X), float64(rect.Position.Y), float64(rect.Width), float64(rect.Height), rect.Color)
 }
 
 type Sprite struct {
-	X        int
-	Y        int
+	Position *Vector2D
+	Speed    float64
 	Width    int
 	Height   int
 	Rotation float64
 	Image    *ebiten.Image
 }
 
+func (sprite *Sprite) Move(where *Vector2D) {
+	sprite.Speed = sprite.Position.DistanceTo(where)
+	sprite.Position = where
+}
+
 func (sprite *Sprite) Draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(-float64(sprite.Width)/2, -float64(sprite.Height)/2)
 	op.GeoM.Rotate(float64(int(sprite.Rotation)%360) * 2 * math.Pi / 360)
-	op.GeoM.Translate(float64(sprite.X), float64(sprite.Y))
+	op.GeoM.Translate(float64(sprite.Position.X), float64(sprite.Position.Y))
 	screen.DrawImage(sprite.Image, op)
 }
 
 type Button struct {
-	X         int
-	Y         int
+	Position  Vector2D
 	Image     *ebiten.Image
 	OnClick   func()
 	isClicked bool
@@ -62,7 +65,7 @@ type Button struct {
 
 func (button *Button) Draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(float64(button.X), float64(button.Y))
+	op.GeoM.Translate(float64(button.Position.X), float64(button.Position.Y))
 	screen.DrawImage(button.Image, op)
 }
 
@@ -82,7 +85,7 @@ func (button *Button) CheckClicked() {
 }
 
 func (button *Button) ContainsPoint(point image.Point) bool {
-	r := button.Image.Bounds().Add(image.Point{int(button.X), int(button.Y)})
+	r := button.Image.Bounds().Add(image.Point{int(button.Position.X), int(button.Position.Y)})
 	return point.X >= r.Min.X && point.X <= r.Max.X && point.Y >= r.Min.Y && point.Y <= r.Max.Y
 }
 

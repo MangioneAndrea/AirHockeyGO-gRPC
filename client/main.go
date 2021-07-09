@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"math"
 
 	"github.com/MangioneAndrea/airhockey/gamepb"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -35,15 +34,10 @@ type GUI struct {
 }
 
 func (g *GUI) Update() error {
-	cursorX, cursorY := ebiten.CursorPosition()
 	delta := ebiten.CurrentTPS() / 60
 	if delta == 0 {
 		return nil
 	}
-	player.Rotation += 1 / delta
-	player.X = int(math.Min((math.Max(float64(cursorX), 0)), screenWidth))
-	player.Y = int(math.Min((math.Max(float64(cursorY), float64(divider.Y))), screenHeight))
-
 	if err := g.stage.Tick(); err != nil {
 		println(err.Error())
 	}

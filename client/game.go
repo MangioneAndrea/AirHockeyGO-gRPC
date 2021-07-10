@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	ball         Sprite
+	ball         Circle
 	player       Sprite
 	opponent     Sprite
 	divider      = Rectangle{Position: Vector2D{X: 0, Y: screenHeight/2 - 2}, Width: screenWidth, Height: 4, Color: color.White}
@@ -63,7 +63,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	opponent.Draw(screen)
 	divider.Draw(screen)
 
-	player.Position.To(ball.Position).DrawAxis(screen)
+	player.Position.To(&ball.Center).DrawAxis(screen)
 }
 
 func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error {
@@ -95,10 +95,12 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 
 	goo, _ := GetImageFromFilePath("client/graphics/gopher.png")
 
-	ball = Sprite{Image: goo, Position: &Vector2D{X: float64(screenWidth / 2), Y: float64(screenHeight / 2)}}
-	ball.Width = ball.Image.Bounds().Size().X
-	ball.Height = ball.Image.Bounds().Size().Y
-
+	ball = Circle{Center: Vector2D{X: float64(screenWidth / 2), Y: float64(screenHeight / 2)}, Radius: 15}
+	/*
+		ball = Sprite{Image: goo, Position: &Vector2D{X: float64(screenWidth / 2), Y: float64(screenHeight / 2)}}
+		ball.Width = ball.Image.Bounds().Size().X
+		ball.Height = ball.Image.Bounds().Size().Y
+	*/
 	player = Sprite{
 		Image: goo, Position: &Vector2D{X: 0, Y: 0},
 	}

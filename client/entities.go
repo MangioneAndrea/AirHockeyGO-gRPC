@@ -34,6 +34,27 @@ func (rect *Rectangle) Draw(screen *ebiten.Image) {
 	ebitenutil.DrawRect(screen, float64(rect.Position.X), float64(rect.Position.Y), float64(rect.Width), float64(rect.Height), rect.Color)
 }
 
+type Circle struct {
+	Center Vector2D
+	Radius int
+	Color  color.Color
+}
+
+func (circle *Circle) Draw(screen *ebiten.Image) {
+
+	previousX := .0
+	previousY := .0
+	for theta := float64(0); theta < 2*math.Pi; theta += math.Pi * 0.1 {
+		x := float64(circle.Center.X) + float64(circle.Radius)*math.Cos(theta)
+		y := float64(circle.Center.Y) - float64(circle.Radius)*math.Sin(theta)
+		if previousX != 0 {
+			ebitenutil.DrawLine(screen, previousX, previousY, x, y, color.White)
+		}
+		previousX = x
+		previousY = y
+	}
+}
+
 type Sprite struct {
 	Position *Vector2D
 	Speed    float64

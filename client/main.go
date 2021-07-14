@@ -5,6 +5,7 @@ import (
 
 	"github.com/MangioneAndrea/airhockey/gamepb"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"google.golang.org/grpc"
 )
 
@@ -15,7 +16,8 @@ const (
 )
 
 var (
-	connection gamepb.PositionServiceClient
+	connection  gamepb.PositionServiceClient
+	ClientDebug = false
 )
 
 type Actor interface {
@@ -34,6 +36,9 @@ type GUI struct {
 }
 
 func (g *GUI) Update() error {
+	if inpututil.IsKeyJustPressed(ebiten.KeyF6) {
+		ClientDebug = !ClientDebug
+	}
 	delta := ebiten.CurrentTPS() / 60
 	if delta == 0 {
 		return nil

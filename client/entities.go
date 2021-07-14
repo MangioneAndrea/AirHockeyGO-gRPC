@@ -14,6 +14,7 @@ import (
 
 type Entity interface {
 	Draw()
+	AddForce(*Vector3D)
 }
 
 type Clickable interface {
@@ -22,7 +23,6 @@ type Clickable interface {
 type Intersectable interface {
 	ContainsPoint(point image.Point)
 }
-
 type Rectangle struct {
 	Position Vector2D
 	Width    int
@@ -35,13 +35,15 @@ func (rect *Rectangle) Draw(screen *ebiten.Image) {
 }
 
 type Circle struct {
-	Center Vector2D
+	Center *Vector2D
 	Radius int
-	Color  color.Color
+}
+
+func (circle *Circle) Intersects(other *Circle) bool {
+	return false
 }
 
 func (circle *Circle) Draw(screen *ebiten.Image) {
-
 	previousX := .0
 	previousY := .0
 	for theta := float64(0); theta < 2*math.Pi; theta += math.Pi * 0.1 {
@@ -56,24 +58,54 @@ func (circle *Circle) Draw(screen *ebiten.Image) {
 }
 
 type Sprite struct {
-	Position *Vector2D
+	Hitbox   *Circle
 	Speed    float64
-	Width    int
-	Height   int
 	Rotation float64
 	Image    *ebiten.Image
 }
 
+type PhisicSprite struct {
+	Hitbox    *Circle
+	Rotation  float64
+	Direction *Vector3D
+	Image     *ebiten.Image
+}
+
+func (sprite *PhisicSprite) AddForce(force *Vector3D) {
+	sprite.Direction = force
+}
+func (sprite *PhisicSprite) Move(where *Vector2D) {
+	sprite.Direction.Z = sprite.Hitbox.Center.DistanceTo(where)
+	sprite.Hitbox.Center = where
+}
+
+func (sprite *PhisicSprite) Draw(screen *ebiten.Image) {
+	if ClientDebug {
+		sprite.Hitbox.Draw(screen)
+	}
+	if sprite.Image == nil {
+		return
+	}
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(-float64(sprite.Hitbox.Radius)/2, -float64(sprite.Hitbox.Radius)/2)
+	op.GeoM.Rotate(float64(int(sprite.Rotation)%360) * 2 * math.Pi / 360)
+	op.GeoM.Translate(float64(sprite.Hitbox.Center.X), float64(sprite.Hitbox.Center.Y))
+	screen.DrawImage(sprite.Image, op)
+}
+
 func (sprite *Sprite) Move(where *Vector2D) {
-	sprite.Speed = sprite.Position.DistanceTo(where)
-	sprite.Position = where
+	sprite.Speed = sprite.Hitbox.Center.DistanceTo(where)
+	sprite.Hitbox.Center = where
 }
 
 func (sprite *Sprite) Draw(screen *ebiten.Image) {
+	if ClientDebug {
+		sprite.Hitbox.Draw(screen)
+	}
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-float64(sprite.Width)/2, -float64(sprite.Height)/2)
+	op.GeoM.Translate(-float64(sprite.Hitbox.Radius)/2, -float64(sprite.Hitbox.Radius)/2)
 	op.GeoM.Rotate(float64(int(sprite.Rotation)%360) * 2 * math.Pi / 360)
-	op.GeoM.Translate(float64(sprite.Position.X), float64(sprite.Position.Y))
+	op.GeoM.Translate(float64(sprite.Hitbox.Center.X), float64(sprite.Hitbox.Center.Y))
 	screen.DrawImage(sprite.Image, op)
 }
 

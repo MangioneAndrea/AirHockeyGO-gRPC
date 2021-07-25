@@ -13,8 +13,8 @@ import (
 )
 
 type Entity interface {
-	Draw()
-	AddForce(*Vector3D)
+	Tick()
+	AddForce(*Vector2D, float64)
 }
 
 type Clickable interface {
@@ -40,7 +40,12 @@ type Circle struct {
 }
 
 func (circle *Circle) Intersects(other *Circle) bool {
-	return false
+
+	dx := circle.Center.X - other.Center.X
+	dy := circle.Center.Y - other.Center.Y
+	distance := math.Sqrt(dx*dx + dy*dy)
+
+	return distance < float64(circle.Radius+other.Radius)
 }
 
 func (circle *Circle) Draw(screen *ebiten.Image) {
@@ -65,32 +70,33 @@ type Sprite struct {
 }
 
 type PhisicSprite struct {
-	Hitbox    *Circle
-	Rotation  float64
-	Direction *Vector3D
-	Image     *ebiten.Image
+	Sprite    *Sprite
+	Direction *Vector2D
 }
 
-func (sprite *PhisicSprite) AddForce(force *Vector3D) {
-	sprite.Direction = force
-}
-func (sprite *PhisicSprite) Move(where *Vector2D) {
-	sprite.Direction.Z = sprite.Hitbox.Center.DistanceTo(where)
-	sprite.Hitbox.Center = where
+func (phisicSprite *PhisicSprite) Tick() {
+	phisicSprite.Move(
+		phisicSprite.Sprite.Hitbox.Center.Plus(
+			phisicSprite.Direction.Times(phisicSprite.Sprite.Speed / 100),
+		))
 }
 
-func (sprite *PhisicSprite) Draw(screen *ebiten.Image) {
+func (phisicSprite *PhisicSprite) AddForce(force *Vector2D, speed float64) {
+	phisicSprite.Direction = force
+	phisicSprite.Sprite.Speed = speed
+}
+func (phisicSprite *PhisicSprite) Move(where *Vector2D) {
+	phisicSprite.Sprite.Hitbox.Center = where
+}
+
+func (phisicSprite *PhisicSprite) Draw(screen *ebiten.Image) {
 	if ClientDebug {
-		sprite.Hitbox.Draw(screen)
+		phisicSprite.Sprite.Hitbox.Draw(screen)
 	}
-	if sprite.Image == nil {
+	if phisicSprite.Sprite.Image == nil {
 		return
 	}
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-float64(sprite.Hitbox.Radius)/2, -float64(sprite.Hitbox.Radius)/2)
-	op.GeoM.Rotate(float64(int(sprite.Rotation)%360) * 2 * math.Pi / 360)
-	op.GeoM.Translate(float64(sprite.Hitbox.Center.X), float64(sprite.Hitbox.Center.Y))
-	screen.DrawImage(sprite.Image, op)
+	phisicSprite.Sprite.Draw(screen)
 }
 
 func (sprite *Sprite) Move(where *Vector2D) {
@@ -103,7 +109,7 @@ func (sprite *Sprite) Draw(screen *ebiten.Image) {
 		sprite.Hitbox.Draw(screen)
 	}
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-float64(sprite.Hitbox.Radius)/2, -float64(sprite.Hitbox.Radius)/2)
+	op.GeoM.Translate(-float64(sprite.Image.Bounds().Size().X)/2, -float64(sprite.Image.Bounds().Size().X)/2)
 	op.GeoM.Rotate(float64(int(sprite.Rotation)%360) * 2 * math.Pi / 360)
 	op.GeoM.Translate(float64(sprite.Hitbox.Center.X), float64(sprite.Hitbox.Center.Y))
 	screen.DrawImage(sprite.Image, op)

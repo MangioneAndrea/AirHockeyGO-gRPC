@@ -21,6 +21,7 @@ const (
 )
 
 var (
+	constructed  bool = false
 	ball         PhisicSprite
 	player       Sprite
 	opponent     Sprite
@@ -33,6 +34,9 @@ type Game struct {
 }
 
 func (g *Game) Tick() error {
+	if !constructed {
+		return nil
+	}
 	cursorX, cursorY := ebiten.CursorPosition()
 	delta := ebiten.CurrentTPS() / 60
 	if delta == 0 {
@@ -49,20 +53,21 @@ func (g *Game) Tick() error {
 		Token:  g.token,
 	})
 
-	if player.Hitbox.Intersects(ball.Hitbox) {
-		ball.AddForce(&Vector3D{})
+	if player.Hitbox.Intersects(ball.Sprite.Hitbox) {
+		ball.AddForce(ball.Sprite.Hitbox.Center.Minus(player.Hitbox.Center), 5)
 	}
 
 	if err != nil {
 		fmt.Printf("Error while sending %v\n", err)
 	}
 
+	ball.Tick()
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	if ClientDebug {
-		player.Hitbox.Center.To(ball.Hitbox.Center).DrawAxis(screen)
+		player.Hitbox.Center.To(ball.Sprite.Hitbox.Center).DrawAxis(screen)
 	}
 	player.Draw(screen)
 	ball.Draw(screen)
@@ -99,31 +104,32 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 
 	goo, _ := GetImageFromFilePath("client/graphics/gopher.png")
 
-	ball = PhisicSprite{Hitbox: &Circle{Center: &Vector2D{X: float64(screenWidth / 2), Y: float64(screenHeight / 2)}, Radius: 15}}
-	/*
-		ball = Sprite{Image: goo, Position: &Vector2D{X: float64(screenWidth / 2), Y: float64(screenHeight / 2)}}
-		ball.Width = ball.Image.Bounds().Size().X
-		ball.Height = ball.Image.Bounds().Size().Y
-	*/
+	ball = PhisicSprite{Sprite: &Sprite{
+		Hitbox: &Circle{Center: &Vector2D{X: float64(screenWidth) / 2, Y: float64(screenHeight) / 1.3}, Radius: 15},
+
+		Image: goo,
+	},
+		Direction: &Vector2D{X: float64(screenWidth) / 2, Y: float64(screenHeight) / 1.3},
+	}
 	player = Sprite{
 		Hitbox: &Circle{
 			Center: &Vector2D{X: 0, Y: 0},
 		},
 		Image: goo,
 	}
-	player.Hitbox.Radius = int(math.Max(float64(player.Image.Bounds().Size().X), float64(player.Image.Bounds().Size().Y)))
+	player.Hitbox.Radius = int(math.Max(float64(player.Image.Bounds().Size().X)/2, float64(player.Image.Bounds().Size().Y)/2))
 	player.Hitbox.Center.X = float64(screenWidth / 2)
 	player.Hitbox.Center.Y = float64(screenHeight - player.Hitbox.Radius - 25)
 	opponent = Sprite{
 		Image: goo,
 		Hitbox: &Circle{
-			Radius: int(math.Max(float64(player.Image.Bounds().Size().X), float64(player.Image.Bounds().Size().Y))),
+			Radius: int(math.Max(float64(player.Image.Bounds().Size().X)/2, float64(player.Image.Bounds().Size().Y)/2)),
 		},
 	}
 	opponent.Hitbox.Center = &Vector2D{X: float64(screenWidth / 2), Y: float64(opponent.Hitbox.Radius + 25)}
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Airhockey go!")
-
+	constructed = true
 	return nil
 }

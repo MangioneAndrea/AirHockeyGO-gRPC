@@ -22,7 +22,7 @@ var (
 
 type Actor interface {
 	Tick() error
-	OnConstruction(int, int) error
+	OnConstruction() error
 }
 
 type Stage interface {

@@ -35,8 +35,9 @@ func (rect *Rectangle) Draw(screen *ebiten.Image) {
 }
 
 type Circle struct {
-	Center *Vector2D
-	Radius int
+	Center         *Vector2D
+	Radius         int
+	memoizedPoints []*Vector2D
 }
 
 func (circle *Circle) Intersects(other *Circle) bool {
@@ -49,16 +50,28 @@ func (circle *Circle) Intersects(other *Circle) bool {
 }
 
 func (circle *Circle) Draw(screen *ebiten.Image) {
-	previousX := .0
-	previousY := .0
-	for theta := float64(0); theta < 2*math.Pi; theta += math.Pi * 0.1 {
-		x := float64(circle.Center.X) + float64(circle.Radius)*math.Cos(theta)
-		y := float64(circle.Center.Y) - float64(circle.Radius)*math.Sin(theta)
-		if previousX != 0 {
-			ebitenutil.DrawLine(screen, previousX, previousY, x, y, color.White)
+	// Memoize calc of the circle to speed up the process
+	if circle.memoizedPoints == nil || len(circle.memoizedPoints) == 0 {
+		for theta := float64(0); theta < 2*math.Pi; theta += math.Pi * 0.1 {
+			x := +float64(circle.Radius) * math.Cos(theta)
+			y := -float64(circle.Radius) * math.Sin(theta)
+			circle.memoizedPoints = append(circle.memoizedPoints, &Vector2D{X: x, Y: y})
 		}
-		previousX = x
-		previousY = y
+	}
+	for index, vector := range circle.memoizedPoints {
+		var other *Vector2D
+		if index == 0 {
+			other = circle.memoizedPoints[len(circle.memoizedPoints)-1]
+		} else {
+			other = circle.memoizedPoints[index-1]
+		}
+		ebitenutil.DrawLine(
+			screen,
+			float64(circle.Center.X)+other.X,
+			float64(circle.Center.Y)-other.Y,
+			float64(circle.Center.X)+vector.X,
+			float64(circle.Center.Y)-vector.Y,
+			color.White)
 	}
 }
 

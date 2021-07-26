@@ -21,11 +21,17 @@ const (
 )
 
 var (
-	constructed  bool = false
-	ball         PhisicSprite
-	player       Sprite
-	opponent     Sprite
-	divider      = Rectangle{Position: Vector2D{X: 0, Y: screenHeight/2 - 2}, Width: screenWidth, Height: 4, Color: color.White}
+	constructed bool = false
+	ball        PhisicSprite
+	player      Sprite
+	opponent    Sprite
+	divider     = Rectangle{Position: Vector2D{X: 0, Y: screenHeight/2 - 2}, Width: screenWidth, Height: 4, Color: color.White}
+	contours    = []*Line2D{
+		{Start: &Vector2D{X: 1, Y: 1}, Direction: &Vector2D{X: 1, Y: screenHeight}},
+		{Start: &Vector2D{X: 1, Y: 1}, Direction: &Vector2D{X: screenWidth, Y: 1}},
+		{Start: &Vector2D{X: screenWidth, Y: 1}, Direction: &Vector2D{X: screenWidth, Y: screenHeight}},
+		{Start: &Vector2D{X: 1, Y: screenHeight - 1}, Direction: &Vector2D{X: screenWidth, Y: screenHeight - 1}},
+	}
 	updateStatus gamepb.PositionService_UpdateStatusClient
 )
 
@@ -54,7 +60,7 @@ func (g *Game) Tick() error {
 	})
 
 	if player.Hitbox.Intersects(ball.Sprite.Hitbox) {
-		ball.AddForce(ball.Sprite.Hitbox.Center.Minus(player.Hitbox.Center), 5)
+		ball.AddForce(ball.Sprite.Hitbox.Center.Minus(player.Hitbox.Center), player.Speed)
 	}
 
 	if err != nil {
@@ -68,6 +74,9 @@ func (g *Game) Tick() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	if ClientDebug {
 		player.Hitbox.Center.To(ball.Sprite.Hitbox.Center).DrawAxis(screen)
+		for _, rect := range contours {
+			rect.Draw(screen)
+		}
 	}
 	player.Draw(screen)
 	ball.Draw(screen)
@@ -106,10 +115,10 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 
 	ball = PhisicSprite{Sprite: &Sprite{
 		Hitbox: &Circle{Center: &Vector2D{X: float64(screenWidth) / 2, Y: float64(screenHeight) / 1.3}, Radius: 15},
-
-		Image: goo,
+		Image:  goo,
 	},
-		Direction: &Vector2D{X: float64(screenWidth) / 2, Y: float64(screenHeight) / 1.3},
+		Direction:      &Vector2D{X: float64(screenWidth) / 2, Y: float64(screenHeight) / 1.3},
+		LineCollisions: &contours,
 	}
 	player = Sprite{
 		Hitbox: &Circle{

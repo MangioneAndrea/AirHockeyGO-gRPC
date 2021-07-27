@@ -2,6 +2,7 @@ package figures
 
 import (
 	"image/color"
+	"math"
 )
 
 type Rectangle struct {
@@ -49,6 +50,18 @@ func (rectangle *Rectangle) Intersects(elem Figure) bool {
 		bot, right, top, left := rectangle.Sides()
 		return bot.Intersects(other) || right.Intersects(other) || top.Intersects(other) || left.Intersects(other)
 	case *Circle:
+		// Get the distance between the center of the circle and the center of the rectangle
+		d := rectangle.Start.Vector.Plus(rectangle.End.Vector).Times(0.5).Minus(other.Center.Vector).Abs()
+		// The distance is bigger than the radius and half the length/height of the rectangle
+		if d.X > rectangle.Width/2+other.Radius || d.Y > rectangle.Height/2+other.Radius {
+			return false
+		}
+		// The center of the circle is inside the rectangle
+		if rectangle.Intersects(other.Center) {
+			return true
+		}
+		// The distance may overlap the corners of the rectangle (pitagoras)
+		return (math.Pow(d.X-rectangle.Width/2, 2)+math.Pow(d.Y-rectangle.Height/2, 2) <= math.Pow(other.Radius, 2))
 	}
 
 	return false

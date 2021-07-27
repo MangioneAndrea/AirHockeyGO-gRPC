@@ -2,8 +2,8 @@ package figures
 
 import (
 	"image/color"
+	"math"
 
-	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
@@ -19,7 +19,11 @@ func NewLine(start *Point, direction *Point) *Line {
 	res := &Line{
 		Start:     start,
 		Direction: direction,
-		slope:     (direction.Y - start.Y) / (direction.X - start.X),
+	}
+	if direction.X == start.X {
+		res.slope = math.Inf(1)
+	} else {
+		res.slope = (direction.Y - start.Y) / (direction.X - start.X)
 	}
 	res.yIntercept = res.slope*start.X + start.Y
 	return res
@@ -31,7 +35,13 @@ func (line *Line) Intersects(elem Figure) bool {
 		// Either a different slope (1 point), or it's identical (infinite points)
 		return line.Slope() != other.Slope() || line.YIntercept() == other.YIntercept()
 	case *Segment:
-		// TODO
+		// If slope and yintercepts are the same, the segment is contained in the line
+		if other.Slope() == line.Slope() && other.YIntercept() == line.YIntercept() {
+			return true
+		}
+		// If the intersection of the line and a virtual line along the segment is contained in the segment, it intersects
+		return other.Intersects(line.Intersection(other.ToLine()))
+
 	case *Point:
 		return line.Slope() == NewLine(line.Start, other).Slope()
 	case *Rectangle:
@@ -64,17 +74,17 @@ func (line *Line) Slope() float64 {
 func (line *Line) YIntercept() float64 {
 	return line.yIntercept
 }
-func (line *Line) Intersection(other *Line) *vectors.Vector2D {
+func (line *Line) Intersection(other *Line) *Point {
 	// Division by 0 (0 or infinite vectors)r
 	if line.Slope() == other.Slope() {
 		return nil
 	}
 	X := (other.YIntercept() - line.YIntercept()) / (other.Slope() - line.Slope())
 
-	return &vectors.Vector2D{
-		X: X,
-		Y: line.Slope()*X + line.YIntercept(),
-	}
+	return NewPoint(
+		X,
+		line.Slope()*X+line.YIntercept(),
+	)
 }
 
 func (line *Line) NearestPointTo(point *Point) *Point {

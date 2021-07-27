@@ -39,7 +39,12 @@ func (point *Point) Intersects(elem Figure) bool {
 		}
 		return false
 	case *Line:
+		return other.Slope() == NewLine(other.Start, point).Slope()
 	case *Segment:
+		// The point is between the 2 x's and the slope is the same (same immaginary line)
+		return point.X <= math.Max(other.Start.X, other.End.X) && point.X >= math.Min(other.Start.X, other.End.X) &&
+			other.Slope() == NewLine(other.Start, point).Slope()
+
 	}
 	// The point cannot check if it is contained, as it doesn't know the other figure
 	return elem.Intersects(point)

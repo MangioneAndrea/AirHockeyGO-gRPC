@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"image/color"
 	"io"
 	"log"
 	"math"
 
+	"github.com/MangioneAndrea/airhockey/client/geometry/figures"
+	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
 	"github.com/MangioneAndrea/airhockey/gamepb"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -25,12 +26,11 @@ var (
 	ball        PhisicSprite
 	player      Sprite
 	opponent    Sprite
-	divider     = Rectangle{Position: Vector2D{X: 0, Y: screenHeight/2 - 2}, Width: screenWidth, Height: 4, Color: color.White}
-	contours    = []*Line2D{
-		{Start: &Vector2D{X: 1, Y: 1}, Direction: &Vector2D{X: 1, Y: screenHeight}},
-		{Start: &Vector2D{X: 1, Y: 1}, Direction: &Vector2D{X: screenWidth, Y: 1}},
-		{Start: &Vector2D{X: screenWidth, Y: 1}, Direction: &Vector2D{X: screenWidth, Y: screenHeight}},
-		{Start: &Vector2D{X: 1, Y: screenHeight - 1}, Direction: &Vector2D{X: screenWidth, Y: screenHeight - 1}},
+	divider     = figures.NewRectangle(figures.NewPoint(0, screenHeight/2-2), screenWidth, 4)
+	contours    = []*figures.Line{figures.NewLine(figures.NewPoint(1, 1), figures.NewPoint(1, screenHeight)),
+		figures.NewLine(figures.NewPoint(1, 1), figures.NewPoint(screenWidth, 1)),
+		figures.NewLine(figures.NewPoint(screenWidth, 1), figures.NewPoint(screenWidth, screenHeight)),
+		figures.NewLine(figures.NewPoint(1, screenHeight-1), figures.NewPoint(screenWidth, screenHeight-1)),
 	}
 	updateStatus gamepb.PositionService_UpdateStatusClient
 )
@@ -49,9 +49,9 @@ func (g *Game) Tick() error {
 		return nil
 	}
 	player.Rotation += 1 / delta
-	player.Move(&Vector2D{
+	player.Move(&vectors.Vector2D{
 		X: math.Min((math.Max(float64(cursorX), 0)), screenWidth),
-		Y: math.Min((math.Max(float64(cursorY), divider.Position.Y)), screenHeight),
+		Y: math.Min((math.Max(float64(cursorY), divider.Start.Y)), screenHeight),
 	})
 
 	err := updateStatus.Send(&gamepb.UserInput{
@@ -60,7 +60,7 @@ func (g *Game) Tick() error {
 	})
 
 	if player.Hitbox.Intersects(ball.Sprite.Hitbox) {
-		ball.AddForce(ball.Sprite.Hitbox.Center.Minus(player.Hitbox.Center), player.Speed)
+		ball.AddForce(ball.Sprite.Hitbox.Center.Vector.Minus(player.Hitbox.Center.Vector), player.Speed)
 	}
 
 	if err != nil {
@@ -73,7 +73,7 @@ func (g *Game) Tick() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	if ClientDebug {
-		player.Hitbox.Center.To(ball.Sprite.Hitbox.Center).DrawAxis(screen)
+		player.Hitbox.Center.LineTo(ball.Sprite.Hitbox.Center).DrawAxis(screen, figures.NewRectangle2(figures.NewPoint(0, 0), figures.NewPoint(screenWidth, screenHeight)))
 		for _, rect := range contours {
 			rect.Draw(screen)
 		}
@@ -114,29 +114,26 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 	goo, _ := GetImageFromFilePath("client/graphics/gopher.png")
 
 	ball = PhisicSprite{Sprite: &Sprite{
-		Hitbox: &Circle{Center: &Vector2D{X: float64(screenWidth) / 2, Y: float64(screenHeight) / 1.3}, Radius: 15},
+		Hitbox: figures.NewCircle(figures.NewPoint(float64(screenWidth)/2, float64(screenHeight)/1.3), 15),
 		Image:  goo,
 	},
-		Direction:      &Vector2D{X: float64(screenWidth) / 2, Y: float64(screenHeight) / 1.3},
+		Direction:      &vectors.Vector2D{X: float64(screenWidth) / 2, Y: float64(screenHeight) / 1.3},
 		LineCollisions: &contours,
 	}
 	player = Sprite{
-		Hitbox: &Circle{
-			Center: &Vector2D{X: 0, Y: 0},
-		},
+		Hitbox: figures.NewCircle(
+			figures.NewPoint(float64(screenWidth/2), float64(screenHeight)-player.Hitbox.Radius-25),
+			math.Max(float64(goo.Bounds().Size().X)/2, float64(goo.Bounds().Size().Y)/2),
+		),
 		Image: goo,
 	}
-	player.Hitbox.Radius = int(math.Max(float64(player.Image.Bounds().Size().X)/2, float64(player.Image.Bounds().Size().Y)/2))
-	player.Hitbox.Center.X = float64(screenWidth / 2)
-	player.Hitbox.Center.Y = float64(screenHeight - player.Hitbox.Radius - 25)
 	opponent = Sprite{
 		Image: goo,
-		Hitbox: &Circle{
-			Radius: int(math.Max(float64(player.Image.Bounds().Size().X)/2, float64(player.Image.Bounds().Size().Y)/2)),
-		},
+		Hitbox: figures.NewCircle(
+			figures.NewPoint(float64(screenWidth/2), float64(opponent.Hitbox.Radius+25)),
+			math.Max(float64(player.Image.Bounds().Size().X)/2, float64(player.Image.Bounds().Size().Y)/2),
+		),
 	}
-	opponent.Hitbox.Center = &Vector2D{X: float64(screenWidth / 2), Y: float64(opponent.Hitbox.Radius + 25)}
-
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Airhockey go!")
 	constructed = true

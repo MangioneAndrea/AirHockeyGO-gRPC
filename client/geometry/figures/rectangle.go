@@ -3,6 +3,9 @@ package figures
 import (
 	"image/color"
 	"math"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 type Rectangle struct {
@@ -72,4 +75,11 @@ func (rectangle *Rectangle) Sides() (bot *Segment, right *Segment, top *Segment,
 		NewSegment(NewPoint(rectangle.End.X, rectangle.Start.Y), rectangle.End),
 		NewSegment(rectangle.Start, NewPoint(rectangle.End.X, rectangle.Start.Y)),
 		NewSegment(rectangle.Start, NewPoint(rectangle.Start.X, rectangle.End.Y))
+}
+
+func (rectangle *Rectangle) Draw(screen *ebiten.Image) {
+	if rectangle.Color == nil {
+		rectangle.Color = color.White
+	}
+	ebitenutil.DrawRect(screen, float64(rectangle.Start.X), float64(rectangle.Start.Y), float64(rectangle.Width), float64(rectangle.Height), rectangle.Color)
 }

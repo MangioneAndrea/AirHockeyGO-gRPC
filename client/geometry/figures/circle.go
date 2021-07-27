@@ -15,6 +15,13 @@ type Circle struct {
 	memoizedPoints []*vectors.Vector2D
 }
 
+func NewCircle(center *Point, radius float64) *Circle {
+	return &Circle{
+		Center: center,
+		Radius: radius,
+	}
+}
+
 func (circle *Circle) Intersects(elem Figure) bool {
 	switch other := (elem).(type) {
 	case *Circle:

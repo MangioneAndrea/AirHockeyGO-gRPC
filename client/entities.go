@@ -2,7 +2,6 @@ package main
 
 import (
 	"image"
-	"image/color"
 	_ "image/png"
 	"log"
 	"math"
@@ -11,7 +10,6 @@ import (
 	"github.com/MangioneAndrea/airhockey/client/geometry/figures"
 	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 type Entity interface {
@@ -25,19 +23,6 @@ type Clickable interface {
 type Intersectable interface {
 	Intersects(other *Intersectable)
 }
-type Rectangle struct {
-	Position vectors.Vector2D
-	Width    int
-	Height   int
-	Color    color.Color
-}
-
-func (rect *Rectangle) Draw(screen *ebiten.Image) {
-	if rect.Color == nil {
-		rect.Color = color.White
-	}
-	ebitenutil.DrawRect(screen, float64(rect.Position.X), float64(rect.Position.Y), float64(rect.Width), float64(rect.Height), rect.Color)
-}
 
 type Sprite struct {
 	Hitbox   *figures.Circle
@@ -49,7 +34,7 @@ type Sprite struct {
 type PhisicSprite struct {
 	Sprite         *Sprite
 	Direction      *vectors.Vector2D
-	LineCollisions *[]*figures.Line2D
+	LineCollisions *[]*figures.Line
 }
 
 func (phisicSprite *PhisicSprite) Tick() {
@@ -60,7 +45,7 @@ func (phisicSprite *PhisicSprite) Tick() {
 	}
 
 	phisicSprite.Move(
-		phisicSprite.Sprite.Hitbox.Center.Plus(
+		phisicSprite.Sprite.Hitbox.Center.Vector.Plus(
 			phisicSprite.Direction.Times(phisicSprite.Sprite.Speed / 100),
 		))
 }
@@ -70,7 +55,7 @@ func (phisicSprite *PhisicSprite) AddForce(force *vectors.Vector2D, speed float6
 	phisicSprite.Sprite.Speed = speed
 }
 func (phisicSprite *PhisicSprite) Move(where *vectors.Vector2D) {
-	phisicSprite.Sprite.Hitbox.Center = where
+	phisicSprite.Sprite.Hitbox.Center = figures.NewPoint2(where)
 }
 
 func (phisicSprite *PhisicSprite) Draw(screen *ebiten.Image) {
@@ -84,8 +69,8 @@ func (phisicSprite *PhisicSprite) Draw(screen *ebiten.Image) {
 }
 
 func (sprite *Sprite) Move(where *vectors.Vector2D) {
-	sprite.Speed = math.Abs(sprite.Hitbox.Center.DistanceTo(where))
-	sprite.Hitbox.Center = where
+	sprite.Speed = math.Abs(sprite.Hitbox.Center.Vector.DistanceTo(where))
+	sprite.Hitbox.Center = figures.NewPoint2(where)
 }
 
 func (sprite *Sprite) Draw(screen *ebiten.Image) {
@@ -118,20 +103,16 @@ func (button *Button) CheckClicked() {
 	}
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		x, y := ebiten.CursorPosition()
-		if !button.isClicked && button.Intersects(&figures.Rectangle{Position: vectors.Vector2D{X: x, Y: y}}) {
+		if !button.isClicked &&
+			figures.NewRectangle(
+				figures.NewPoint2(&button.Position),
+				float64(button.Image.Bounds().Dx()),
+				float64(button.Image.Bounds().Dy())).Intersects(figures.NewPoint(float64(x), float64(y))) {
 			button.OnClick()
 		}
 		button.isClicked = true
 	} else {
 		button.isClicked = false
-	}
-}
-
-func (button *Button) Intersects(intersectable Intersectable) bool {
-	switch t := intersectable.(type) {
-	case Point:
-		r := button.Image.Bounds().Add(image.Point{int(button.Position.X), int(button.Position.Y)})
-		return point.X >= r.Min.X && point.X <= r.Max.X && point.Y >= r.Min.Y && point.Y <= r.Max.Y
 	}
 }
 

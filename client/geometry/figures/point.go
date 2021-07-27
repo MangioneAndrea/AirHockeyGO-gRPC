@@ -15,6 +15,9 @@ type Point struct {
 func NewPoint(x float64, y float64) *Point {
 	return &Point{Vector: &vectors.Vector2D{X: x, Y: y}, X: x, Y: y}
 }
+func NewPoint2(vector *vectors.Vector2D) *Point {
+	return &Point{Vector: vector, X: vector.X, Y: vector.Y}
+}
 
 func (point *Point) Intersects(elem Figure) bool {
 	switch other := (elem).(type) {

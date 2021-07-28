@@ -2,104 +2,60 @@ package main
 
 import (
 	"image"
-	"image/color"
 	_ "image/png"
 	"log"
 	"math"
 	"os"
 
+	"github.com/MangioneAndrea/airhockey/client/geometry/figures"
+	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 type Entity interface {
 	Tick()
-	AddForce(*Vector2D, float64)
+	AddForce(*vectors.Vector2D, float64)
 }
 
 type Clickable interface {
 	CheckClicked()
 }
 type Intersectable interface {
-	ContainsPoint(point image.Point)
-}
-type Rectangle struct {
-	Position Vector2D
-	Width    int
-	Height   int
-	Color    color.Color
-}
-
-func (rect *Rectangle) Draw(screen *ebiten.Image) {
-	ebitenutil.DrawRect(screen, float64(rect.Position.X), float64(rect.Position.Y), float64(rect.Width), float64(rect.Height), rect.Color)
-}
-
-type Circle struct {
-	Center         *Vector2D
-	Radius         int
-	memoizedPoints []*Vector2D
-}
-
-func (circle *Circle) Intersects(other *Circle) bool {
-
-	dx := circle.Center.X - other.Center.X
-	dy := circle.Center.Y - other.Center.Y
-	distance := math.Sqrt(dx*dx + dy*dy)
-
-	return distance < float64(circle.Radius+other.Radius)
-}
-
-func (circle *Circle) Draw(screen *ebiten.Image) {
-	// Memoize calc of the circle to speed up the process
-	if circle.memoizedPoints == nil || len(circle.memoizedPoints) == 0 {
-		for theta := float64(0); theta < 2*math.Pi; theta += math.Pi * 0.1 {
-			x := +float64(circle.Radius) * math.Cos(theta)
-			y := -float64(circle.Radius) * math.Sin(theta)
-			circle.memoizedPoints = append(circle.memoizedPoints, &Vector2D{X: x, Y: y})
-		}
-	}
-	for index, vector := range circle.memoizedPoints {
-		var other *Vector2D
-		if index == 0 {
-			other = circle.memoizedPoints[len(circle.memoizedPoints)-1]
-		} else {
-			other = circle.memoizedPoints[index-1]
-		}
-		ebitenutil.DrawLine(
-			screen,
-			float64(circle.Center.X)+other.X,
-			float64(circle.Center.Y)-other.Y,
-			float64(circle.Center.X)+vector.X,
-			float64(circle.Center.Y)-vector.Y,
-			color.White)
-	}
+	Intersects(other *Intersectable)
 }
 
 type Sprite struct {
-	Hitbox   *Circle
+	Hitbox   *figures.Circle
 	Speed    float64
 	Rotation float64
 	Image    *ebiten.Image
 }
 
 type PhisicSprite struct {
-	Sprite    *Sprite
-	Direction *Vector2D
+	Sprite     *Sprite
+	Direction  *vectors.Vector2D
+	Collisions *[]figures.Figure
 }
 
 func (phisicSprite *PhisicSprite) Tick() {
+	for _, item := range *phisicSprite.Collisions {
+		if phisicSprite.Sprite.Hitbox.Intersects(item) {
+			//fmt.Println("collision with wall")
+		}
+	}
+
 	phisicSprite.Move(
-		phisicSprite.Sprite.Hitbox.Center.Plus(
+		phisicSprite.Sprite.Hitbox.Center.Vector.Plus(
 			phisicSprite.Direction.Times(phisicSprite.Sprite.Speed / 100),
 		))
 }
 
-func (phisicSprite *PhisicSprite) AddForce(force *Vector2D, speed float64) {
+func (phisicSprite *PhisicSprite) AddForce(force *vectors.Vector2D, speed float64) {
 	phisicSprite.Direction = force
 	phisicSprite.Sprite.Speed = speed
 }
-func (phisicSprite *PhisicSprite) Move(where *Vector2D) {
-	phisicSprite.Sprite.Hitbox.Center = where
+func (phisicSprite *PhisicSprite) Move(where *vectors.Vector2D) {
+	phisicSprite.Sprite.Hitbox.Center = figures.NewPoint2(where)
 }
 
 func (phisicSprite *PhisicSprite) Draw(screen *ebiten.Image) {
@@ -112,9 +68,9 @@ func (phisicSprite *PhisicSprite) Draw(screen *ebiten.Image) {
 	phisicSprite.Sprite.Draw(screen)
 }
 
-func (sprite *Sprite) Move(where *Vector2D) {
-	sprite.Speed = sprite.Hitbox.Center.DistanceTo(where)
-	sprite.Hitbox.Center = where
+func (sprite *Sprite) Move(where *vectors.Vector2D) {
+	sprite.Speed = math.Abs(sprite.Hitbox.Center.Vector.DistanceTo(where))
+	sprite.Hitbox.Center = figures.NewPoint2(where)
 }
 
 func (sprite *Sprite) Draw(screen *ebiten.Image) {
@@ -129,7 +85,7 @@ func (sprite *Sprite) Draw(screen *ebiten.Image) {
 }
 
 type Button struct {
-	Position  Vector2D
+	Position  vectors.Vector2D
 	Image     *ebiten.Image
 	OnClick   func()
 	isClicked bool
@@ -147,18 +103,17 @@ func (button *Button) CheckClicked() {
 	}
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		x, y := ebiten.CursorPosition()
-		if !button.isClicked && button.ContainsPoint(image.Point{X: x, Y: y}) {
+		if !button.isClicked &&
+			figures.NewRectangle(
+				figures.NewPoint2(&button.Position),
+				float64(button.Image.Bounds().Dx()),
+				float64(button.Image.Bounds().Dy())).Intersects(figures.NewPoint(float64(x), float64(y))) {
 			button.OnClick()
 		}
 		button.isClicked = true
 	} else {
 		button.isClicked = false
 	}
-}
-
-func (button *Button) ContainsPoint(point image.Point) bool {
-	r := button.Image.Bounds().Add(image.Point{int(button.Position.X), int(button.Position.Y)})
-	return point.X >= r.Min.X && point.X <= r.Max.X && point.Y >= r.Min.Y && point.Y <= r.Max.Y
 }
 
 func GetImageFromFilePath(filePath string) (*ebiten.Image, error) {

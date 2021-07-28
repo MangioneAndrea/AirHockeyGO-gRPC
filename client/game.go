@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"image/color"
 	"io"
 	"log"
 	"math"
@@ -12,6 +13,7 @@ import (
 	"github.com/MangioneAndrea/airhockey/gamepb"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 type GameMode int
@@ -22,16 +24,12 @@ const (
 )
 
 var (
-	constructed bool = false
-	ball        PhisicSprite
-	player      Sprite
-	opponent    Sprite
-	divider     = figures.NewRectangle(figures.NewPoint(0, screenHeight/2-2), screenWidth, 4)
-	contours    = []*figures.Line{figures.NewLine(figures.NewPoint(1, 1), figures.NewPoint(1, screenHeight)),
-		figures.NewLine(figures.NewPoint(1, 1), figures.NewPoint(screenWidth, 1)),
-		figures.NewLine(figures.NewPoint(screenWidth, 1), figures.NewPoint(screenWidth, screenHeight)),
-		figures.NewLine(figures.NewPoint(1, screenHeight-1), figures.NewPoint(screenWidth, screenHeight-1)),
-	}
+	constructed  bool = false
+	ball         PhisicSprite
+	player       Sprite
+	opponent     Sprite
+	divider      = figures.NewRectangle(figures.NewPoint(0, screenHeight/2-2), screenWidth, 4)
+	contours     = figures.NewRectangle(figures.NewPoint(1, 1), screenWidth-2, screenHeight-2)
 	updateStatus gamepb.PositionService_UpdateStatusClient
 )
 
@@ -51,7 +49,7 @@ func (g *Game) Tick() error {
 	player.Rotation += 1 / delta
 	player.Move(&vectors.Vector2D{
 		X: math.Min((math.Max(float64(cursorX), 0)), screenWidth),
-		Y: math.Min((math.Max(float64(cursorY), divider.Start.Y)), screenHeight),
+		Y: math.Min((math.Max(float64(cursorY), 0)), screenHeight),
 	})
 
 	err := updateStatus.Send(&gamepb.UserInput{
@@ -73,10 +71,17 @@ func (g *Game) Tick() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	if ClientDebug {
-		player.Hitbox.Center.LineTo(ball.Sprite.Hitbox.Center).DrawAxis(screen, figures.NewRectangle2(figures.NewPoint(0, 0), figures.NewPoint(screenWidth, screenHeight)))
-		for _, rect := range contours {
-			rect.Draw(screen)
+		s := player.Hitbox.Center.LineTo(ball.Sprite.Hitbox.Center).SnapSegment(screen, contours)
+
+		if s != nil {
+			ebitenutil.DrawLine(screen,
+				s.Start.X,
+				s.Start.Y,
+				s.End.X,
+				s.End.Y,
+				color.White)
 		}
+		contours.Draw(screen)
 	}
 	player.Draw(screen)
 	ball.Draw(screen)
@@ -113,25 +118,28 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 
 	goo, _ := GetImageFromFilePath("client/graphics/gopher.png")
 
+	bot, right, top, left := contours.Sides()
+
 	ball = PhisicSprite{Sprite: &Sprite{
 		Hitbox: figures.NewCircle(figures.NewPoint(float64(screenWidth)/2, float64(screenHeight)/1.3), 15),
 		Image:  goo,
 	},
-		Direction:      &vectors.Vector2D{X: float64(screenWidth) / 2, Y: float64(screenHeight) / 1.3},
-		LineCollisions: &contours,
+		Direction:  &vectors.Vector2D{X: float64(screenWidth) / 2, Y: float64(screenHeight) / 1.3},
+		Collisions: &[]figures.Figure{bot, right, top, left},
 	}
+	radius := math.Max(float64(goo.Bounds().Size().X)/2, float64(goo.Bounds().Size().Y)/2)
 	player = Sprite{
 		Hitbox: figures.NewCircle(
-			figures.NewPoint(float64(screenWidth/2), float64(screenHeight)-player.Hitbox.Radius-25),
-			math.Max(float64(goo.Bounds().Size().X)/2, float64(goo.Bounds().Size().Y)/2),
+			figures.NewPoint(float64(screenWidth/2), float64(screenHeight)-radius-25),
+			radius,
 		),
 		Image: goo,
 	}
 	opponent = Sprite{
 		Image: goo,
 		Hitbox: figures.NewCircle(
-			figures.NewPoint(float64(screenWidth/2), float64(opponent.Hitbox.Radius+25)),
-			math.Max(float64(player.Image.Bounds().Size().X)/2, float64(player.Image.Bounds().Size().Y)/2),
+			figures.NewPoint(float64(screenWidth/2), float64(radius+25)),
+			radius,
 		),
 	}
 	ebiten.SetWindowSize(screenWidth, screenHeight)

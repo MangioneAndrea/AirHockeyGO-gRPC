@@ -32,15 +32,15 @@ type Sprite struct {
 }
 
 type PhisicSprite struct {
-	Sprite         *Sprite
-	Direction      *vectors.Vector2D
-	LineCollisions *[]*figures.Line
+	Sprite     *Sprite
+	Direction  *vectors.Vector2D
+	Collisions *[]figures.Figure
 }
 
 func (phisicSprite *PhisicSprite) Tick() {
-	for _, line := range *phisicSprite.LineCollisions {
-		if phisicSprite.Sprite.Hitbox.Intersects(line) {
-
+	for _, item := range *phisicSprite.Collisions {
+		if phisicSprite.Sprite.Hitbox.Intersects(item) {
+			//fmt.Println("collision with wall")
 		}
 	}
 

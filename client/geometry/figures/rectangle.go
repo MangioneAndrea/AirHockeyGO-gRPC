@@ -81,5 +81,9 @@ func (rectangle *Rectangle) Draw(screen *ebiten.Image) {
 	if rectangle.Color == nil {
 		rectangle.Color = color.White
 	}
-	ebitenutil.DrawRect(screen, float64(rectangle.Start.X), float64(rectangle.Start.Y), float64(rectangle.Width), float64(rectangle.Height), rectangle.Color)
+	bot, right, top, left := rectangle.Sides()
+	ebitenutil.DrawLine(screen, bot.Start.X, bot.Start.Y, bot.End.X, bot.End.Y, rectangle.Color)
+	ebitenutil.DrawLine(screen, right.Start.X, right.Start.Y, right.End.X, right.End.Y, rectangle.Color)
+	ebitenutil.DrawLine(screen, top.Start.X, top.Start.Y, top.End.X, top.End.Y, rectangle.Color)
+	ebitenutil.DrawLine(screen, left.Start.X, left.Start.Y, left.End.X, left.End.Y, rectangle.Color)
 }

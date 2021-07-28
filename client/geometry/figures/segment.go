@@ -1,6 +1,8 @@
 package figures
 
-import "math"
+import (
+	"math"
+)
 
 type Segment struct {
 	Start      *Point
@@ -36,7 +38,8 @@ func (segment *Segment) Intersects(elem Figure) bool {
 		return bot.Intersects(segment) || right.Intersects(segment) || top.Intersects(segment) || left.Intersects(segment)
 	case *Point:
 		// The point is between the 2 x's and the slope is the same (same immaginary line)
-		return other.X <= math.Max(segment.Start.X, segment.End.X) && other.X >= math.Min(segment.Start.X, segment.End.X) &&
+		return other.Y <= math.Max(segment.Start.Y, segment.End.Y) && other.Y >= math.Min(segment.Start.Y, segment.End.Y) &&
+			other.X <= math.Max(segment.Start.X, segment.End.X) && other.X >= math.Min(segment.Start.X, segment.End.X) &&
 			segment.Slope() == NewLine(segment.Start, other).Slope()
 	case *Circle:
 		p := segment.ToLine().NearestPointTo(other.Center)
@@ -56,7 +59,7 @@ func (segment *Segment) Intersects(elem Figure) bool {
 			return true
 		}
 		// If the intersection of the line and a virtual line along the segment is contained in the segment, it intersects
-		return segment.Intersects(other.Intersection(segment.ToLine()))
+		return segment.Intersects(other.LineIntersection(segment.ToLine()))
 	}
 	return false
 }

@@ -21,11 +21,11 @@ func NewLine(start *Point, direction *Point) *Line {
 		Direction: direction,
 	}
 	if direction.X == start.X {
-		res.slope = math.Inf(1)
+		res.slope = math.Inf(0)
 	} else {
 		res.slope = (direction.Y - start.Y) / (direction.X - start.X)
 	}
-	res.yIntercept = res.slope*start.X + start.Y
+	res.yIntercept = -res.slope*start.X + start.Y
 	return res
 }
 
@@ -40,7 +40,7 @@ func (line *Line) Intersects(elem Figure) bool {
 			return true
 		}
 		// If the intersection of the line and a virtual line along the segment is contained in the segment, it intersects
-		return other.Intersects(line.Intersection(other.ToLine()))
+		return other.Intersects(line.LineIntersection(other.ToLine()))
 
 	case *Point:
 		return line.Slope() == NewLine(line.Start, other).Slope()
@@ -58,13 +58,24 @@ func (line *Line) Draw(screen *ebiten.Image) {
 	ebitenutil.DrawLine(screen, line.Start.X, line.Start.Y, line.Direction.X, line.Direction.Y, color.White)
 }
 
-func (line *Line) DrawAxis(screen *ebiten.Image, bounds *Rectangle) {
-	ebitenutil.DrawLine(screen,
-		-line.YIntercept()/line.Slope()+bounds.Start.X,
-		bounds.Start.Y,
-		(bounds.End.X-line.YIntercept())/line.Slope(),
-		bounds.End.Y,
-		color.White)
+func (line *Line) SnapSegment(screen *ebiten.Image, bounds *Rectangle) *Segment {
+	bot, right, top, left := bounds.Sides()
+	sides := []*Segment{bot, right, top, left}
+
+	points := []*Point{}
+
+	for _, side := range sides {
+		p := line.SegmentIntersection(side)
+		if p != nil {
+			points = append(points[:], p)
+		}
+	}
+
+	if len(points) != 2 {
+		return nil
+	}
+
+	return NewSegment(points[0], points[1])
 }
 
 func (line *Line) Slope() float64 {
@@ -74,17 +85,33 @@ func (line *Line) Slope() float64 {
 func (line *Line) YIntercept() float64 {
 	return line.yIntercept
 }
-func (line *Line) Intersection(other *Line) *Point {
-	// Division by 0 (0 or infinite vectors)r
+func (line *Line) LineIntersection(other *Line) *Point {
+	// Division by 0 (0 or infinite vectors)
 	if line.Slope() == other.Slope() {
 		return nil
 	}
-	X := (other.YIntercept() - line.YIntercept()) / (other.Slope() - line.Slope())
-
-	return NewPoint(
-		X,
-		line.Slope()*X+line.YIntercept(),
-	)
+	var X float64
+	var Y float64
+	// The first line is not functional (vertical)
+	if math.IsInf(line.Slope(), 0) {
+		X = line.Direction.X
+		Y = other.Slope()*X + other.YIntercept()
+		// The second line is not functional (vertical)
+	} else if math.IsInf(other.Slope(), 0) {
+		X = other.Direction.X
+		Y = line.Slope()*X + line.YIntercept()
+	} else {
+		X = (line.YIntercept() - other.YIntercept()) / (other.Slope() - line.Slope())
+		Y = line.Slope()*X + line.YIntercept()
+	}
+	return NewPoint(X, Y)
+}
+func (line *Line) SegmentIntersection(other *Segment) *Point {
+	p := line.LineIntersection(other.ToLine())
+	if p == nil || other == nil || !other.Intersects(p) {
+		return nil
+	}
+	return p
 }
 
 func (line *Line) NearestPointTo(point *Point) *Point {

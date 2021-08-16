@@ -59,7 +59,7 @@ func (g *GUI) Update() error {
 		if delta == 0 {
 			return nil
 		}
-		if err := g.stage.Tick(); err != nil {
+		if err := g.stage.Tick(delta int); err != nil {
 			println(err.Error())
 		}
 	*/
@@ -84,8 +84,8 @@ func (g *GUI) GetCtx() js.Value {
 	return g.ctx
 }
 
-func (g *GUI) ChangeScene(scene *entities.Scene) {
-	g.scene = *scene
+func (g *GUI) ChangeScene(scene entities.Scene) {
+	g.scene = scene
 	g.scene.OnConstruction(g)
 }
 

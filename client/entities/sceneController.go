@@ -7,7 +7,7 @@ import (
 )
 
 type SceneController interface {
-	ChangeScene(scene *Scene)
+	ChangeScene(scene Scene)
 	GetConnection() gamepb.PositionServiceClient
 	GetWidth() float32
 	GetHeight() float32

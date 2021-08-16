@@ -32,7 +32,7 @@ func (g *MainMenu) Draw(ctx js.Value) {
 func (g *MainMenu) OnConstruction(c entities.SceneController) {
 	button = actors.NewButton(
 		figures.NewCircle(figures.NewPoint(75, 75), 50),
-		func() { println("clicked") },
+		func() { c.ChangeScene(&Game{}) },
 	)
 	button.OnConstruction(c)
 	g.actors = append(g.actors, button)

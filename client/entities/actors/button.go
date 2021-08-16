@@ -22,7 +22,6 @@ func NewButton(fig figures.Figure, onClick func()) *Button {
 
 func (button *Button) OnConstruction(s entities.SceneController) {
 	s.GetCanvas().Call("addEventListener", "click", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		println(args[0].Get("layerX").Int(), args[0].Get("layerY").Int())
 		if button.Figure.Intersects(figures.NewPoint(float64(args[0].Get("layerX").Int()), float64(args[0].Get("layerY").Int()))) {
 			button.OnClick()
 		}

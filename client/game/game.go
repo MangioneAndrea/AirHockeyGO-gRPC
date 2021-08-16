@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"math"
+	"syscall/js"
 
 	"github.com/MangioneAndrea/airhockey/client/entities"
 	"github.com/MangioneAndrea/airhockey/client/geometry/figures"
@@ -35,20 +36,16 @@ type Game struct {
 	height, width float32
 }
 
-func (g *Game) GetActors() *[]*entities.Actor {
+func (g *Game) GetActors() *[]entities.Actor {
 	return nil
 }
 
-func (g *Game) Tick() {
+func (g *Game) Tick(delta int) {
 	if !constructed {
 		return
 	}
 	cursorX, cursorY := .0, .0 //ebiten.CursorPosition()
-	delta := 30.               //ebiten.CurrentTPS() / 60
-	if delta == 0 {
-		return
-	}
-	player.Rotation += 1 / delta
+	player.Rotation += float64(1 / delta)
 	player.Move(&vectors.Vector2D{
 		X: math.Min((math.Max(float64(cursorX), 0)), float64(g.width)),
 		Y: math.Min((math.Max(float64(cursorY), 0)), float64(g.height)),
@@ -67,10 +64,10 @@ func (g *Game) Tick() {
 		fmt.Printf("Error while sending %v\n", err)
 	}
 
-	ball.Tick()
+	ball.Tick(delta)
 }
 
-func (g *Game) Draw() {
+func (g *Game) Draw(ctx js.Value) {
 	if /*ClientDebug*/ false {
 		s := player.Hitbox.Center.LineTo(ball.Sprite.Hitbox.Center).SnapSegment(contours)
 

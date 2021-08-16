@@ -13,7 +13,7 @@ import (
 )
 
 type Entity interface {
-	Tick()
+	Tick(delta int)
 	AddForce(*vectors.Vector2D, float64)
 }
 
@@ -37,7 +37,7 @@ type PhisicSprite struct {
 	Collisions *[]figures.Figure
 }
 
-func (phisicSprite *PhisicSprite) Tick() {
+func (phisicSprite *PhisicSprite) Tick(delta int) {
 	for _, item := range *phisicSprite.Collisions {
 		if phisicSprite.Sprite.Hitbox.Intersects(item) {
 			//fmt.Println("collision with wall")

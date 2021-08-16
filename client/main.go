@@ -2,74 +2,70 @@ package main
 
 import (
 	"log"
-	"syscall/js"
-	"time"
 
-	"github.com/MangioneAndrea/airhockey/client/entity"
 	"github.com/MangioneAndrea/airhockey/gamepb"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"google.golang.org/grpc"
 )
 
 const (
-	wishedFPS = 60
+	screenWidth  = 600
+	screenHeight = 1200
+	wishedFPS    = 60
 )
 
 var (
-	screenWidth  = 600.
-	screenHeight = 1200.
-	connection   gamepb.PositionServiceClient
-	ClientDebug  = false
+	connection  gamepb.PositionServiceClient
+	ClientDebug = false
 )
 
+type Actor interface {
+	Tick() error
+	OnConstruction() error
+}
+
+type Stage interface {
+	Tick() error
+	OnConstruction(int, int, *GUI) error
+	Draw(screen *ebiten.Image)
+}
+
 type GUI struct {
-	scene  entity.Scene
-	canvas js.Value
-}
-
-func (g *GUI) Start() {
-	g.FitToWindow()
-	g.scene.OnConstruction()
-	for true {
-		time.Sleep(time.Millisecond * 10)
-		g.Update()
-		g.Draw(g.canvas)
-	}
-}
-
-func (g *GUI) FitToWindow() {
-	screenHeight = js.Global().Get("innerHeight").Float()
-	screenWidth = screenHeight / 2
-	g.canvas.Set("height", screenHeight)
-	g.canvas.Set("width", screenWidth)
+	stage Stage
 }
 
 func (g *GUI) Update() error {
-	g.scene.Tick()
-	/*
-		if inpututil.IsKeyJustPressed(ebiten.KeyF6) {
-			ClientDebug = !ClientDebug
-		}
-		delta := ebiten.CurrentTPS() / 60
-		if delta == 0 {
-			return nil
-		}
-		if err := g.stage.Tick(); err != nil {
-			println(err.Error())
-		}
-	*/
+	if inpututil.IsKeyJustPressed(ebiten.KeyF6) {
+		ClientDebug = !ClientDebug
+	}
+	delta := ebiten.CurrentTPS() / 60
+	if delta == 0 {
+		return nil
+	}
+	if err := g.stage.Tick(); err != nil {
+		println(err.Error())
+	}
 	return nil
 }
 
-func (g *GUI) Draw(canvas js.Value) {
-
+func (g *GUI) Draw(screen *ebiten.Image) {
+	g.stage.Draw(screen)
 }
 
-func (g *GUI) ChangeScene(scene entity.Scene) {
-	g.scene = scene
-	//scene.OnConstruction(screenWidth, screenHeight, g)
+func (g *GUI) Layout(outsideWidth, outsideHeight int) (int, int) {
+	return screenWidth, screenHeight
+}
+
+func (g *GUI) ChangeStage(stage Stage) {
+	g.stage = stage
+	stage.OnConstruction(screenWidth, screenHeight, g)
 }
 
 func main() {
+	ebiten.SetWindowSize(screenWidth, screenHeight)
+	ebiten.SetWindowTitle("Airhockey")
+
 	cc, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Could not connect: %v", err)
@@ -78,15 +74,11 @@ func main() {
 
 	connection = gamepb.NewPositionServiceClient(cc)
 
-	g := &GUI{
-		canvas: js.Global().Get("document").Call("getElementById", "main"),
+	g := &GUI{}
+	g.ChangeStage(&MainMenu{})
+	guiError := ebiten.RunGame(g)
+	if guiError != nil {
+		log.Fatal(guiError)
 	}
-	/*
-		js.Global().Get("document").Call("addEventListener", "unload", js.New(func(args []js.Value) {
-			g.alive = false
-		}))
-	*/
-	go g.Start()
 
-	<-make(chan int)
 }

@@ -4,4 +4,3 @@
 go.sum
 vendor
 *.pb.go
-*.wasm

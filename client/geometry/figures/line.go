@@ -1,7 +1,11 @@
 package figures
 
 import (
+	"image/color"
 	"math"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 type Line struct {
@@ -50,11 +54,11 @@ func (line *Line) Intersects(elem Figure) bool {
 	return false
 }
 
-func (line *Line) Draw() {
-	//ebitenutil.DrawLine(screen, line.Start.X, line.Start.Y, line.Direction.X, line.Direction.Y, color.White)
+func (line *Line) Draw(screen *ebiten.Image) {
+	ebitenutil.DrawLine(screen, line.Start.X, line.Start.Y, line.Direction.X, line.Direction.Y, color.White)
 }
 
-func (line *Line) SnapSegment(bounds *Rectangle) *Segment {
+func (line *Line) SnapSegment(screen *ebiten.Image, bounds *Rectangle) *Segment {
 	bot, right, top, left := bounds.Sides()
 	sides := []*Segment{bot, right, top, left}
 

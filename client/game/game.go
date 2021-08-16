@@ -19,7 +19,7 @@ const (
 
 var (
 	constructed  bool = false
-	ball         *actors.Sprite
+	ball         *actors.AnimatedSprite
 	player       *actors.Sprite
 	opponent     *actors.Sprite
 	divider      *actors.Sprite // *figures.Rectangle
@@ -57,7 +57,7 @@ func (g *Game) Tick(delta int) {
 		}
 	*/
 	if player.Hitbox.Intersects(ball.GetHitbox()) {
-		//ball.AddForce(ball.GetHitbox().GetCenter().Vector.Minus(player.Hitbox.GetCenter().Vector), player.Speed)
+		ball.AddForce(ball.GetHitbox().GetCenter().Minus(player.Hitbox.GetCenter()), player.Speed)
 	}
 
 	ball.Tick(delta)
@@ -129,7 +129,7 @@ func (g *Game) OnConstruction(s entities.SceneController) {
 
 	//goo, _ := GetImageFromFilePath("client/graphics/gopher.png")
 
-	ball = actors.NewSprite(
+	ball = actors.NewAnimatedSprite(
 		figures.NewCircle(figures.NewPoint(float64(s.GetWidth())/2, float64(s.GetHeight())/1.3), 15),
 		nil,
 		true,
@@ -146,6 +146,6 @@ func (g *Game) OnConstruction(s entities.SceneController) {
 		false,
 	)
 
-	g.actors = []entities.Actor{player, ball, opponent, divider, contours}
+	g.actors = []entities.Actor{player, ball.Sprite, opponent, divider, contours}
 	constructed = true
 }

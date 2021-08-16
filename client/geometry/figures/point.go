@@ -103,6 +103,9 @@ func (point *Point) Dot(other *Point) float64 {
 func (point *Point) Times(other float64) *Point {
 	return &Point{X: point.X * other, Y: point.Y * other}
 }
+func (point *Point) Avg(other *Point) *Point {
+	return other.Minus(point).Times(0.5).Plus(point)
+}
 
 func (point *Point) DistanceTo(other *Point) float64 {
 	return point.Minus(other).Size()

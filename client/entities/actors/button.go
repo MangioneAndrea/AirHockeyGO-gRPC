@@ -28,9 +28,8 @@ func (button *Button) OnConstruction(s entities.SceneController) {
 		return nil
 	}))
 }
-func (button *Button) Tick(delta int) {
-	return
-}
+func (button *Button) Tick(delta int) {}
+
 func (button *Button) Draw(ctx js.Value) {
 	button.Figure.Draw(ctx)
 }
@@ -38,6 +37,6 @@ func (button *Button) Draw(ctx js.Value) {
 func (button *Button) HasCollisions() bool {
 	return false
 }
-func (button *Button) GetHitbox(delta int) {
-	return
+func (button *Button) GetHitbox() figures.Figure {
+	return figures.Empty()
 }

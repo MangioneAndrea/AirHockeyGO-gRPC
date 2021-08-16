@@ -46,7 +46,7 @@ func (segment *Segment) Intersects(elem Figure) bool {
 		p := segment.ToLine().NearestPointTo(other.Center)
 		// If the point is not in the segment, take the nearest end
 		if !p.Intersects(segment) {
-			if segment.Start.Vector.DistanceTo(p.Vector) < segment.End.Vector.DistanceTo(p.Vector) {
+			if segment.Start.DistanceTo(p) < segment.End.DistanceTo(p) {
 				p = segment.Start
 			} else {
 				p = segment.End
@@ -75,6 +75,14 @@ func (segment *Segment) YIntercept() float64 {
 
 func (segment *Segment) ToLine() *Line {
 	return &Line{Start: segment.Start, Direction: segment.End, slope: segment.slope, yIntercept: segment.yIntercept}
+}
+func (segment *Segment) GetCenter() *Point {
+	return segment.Start.Plus(segment.End).Times(0.5)
+}
+func (segment *Segment) MoveTo(where *Point) {
+	n := segment.GetCenter().Minus(where)
+	segment.Start = segment.Start.Plus(n)
+	segment.End = segment.Start.Plus(n)
 }
 
 func (segment *Segment) Draw(ctx js.Value) {

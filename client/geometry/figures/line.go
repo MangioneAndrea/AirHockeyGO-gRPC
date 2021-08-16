@@ -114,8 +114,17 @@ func (line *Line) SegmentIntersection(other *Segment) *Point {
 	return p
 }
 
+func (line *Line) GetCenter() *Point {
+	return line.Start
+}
+func (line *Line) MoveTo(where *Point) {
+	n := line.GetCenter().Minus(where)
+	line.Start = line.Start.Plus(n)
+	line.Direction = line.Direction.Plus(n)
+}
+
 func (line *Line) NearestPointTo(point *Point) *Point {
-	t := ((point.Vector.X-line.Start.X)*line.Direction.X + (point.Vector.Y-line.Start.Y)*line.Direction.Y) / (line.Direction.Y*line.Direction.Y + line.Direction.X*line.Direction.X)
+	t := ((point.X-line.Start.X)*line.Direction.X + (point.Y-line.Start.Y)*line.Direction.Y) / (line.Direction.Y*line.Direction.Y + line.Direction.X*line.Direction.X)
 	Fx := line.Start.X + line.Direction.X*t
 	Fy := line.Start.Y + line.Direction.Y*t
 	return NewPoint(Fx, Fy)

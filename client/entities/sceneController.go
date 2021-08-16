@@ -3,6 +3,7 @@ package entities
 import (
 	"syscall/js"
 
+	"github.com/MangioneAndrea/airhockey/client/geometry/figures"
 	"github.com/MangioneAndrea/airhockey/gamepb"
 )
 
@@ -13,4 +14,5 @@ type SceneController interface {
 	GetHeight() float32
 	GetCanvas() js.Value
 	GetCtx() js.Value
+	GetMousePosition() *figures.Point
 }

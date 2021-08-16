@@ -43,16 +43,16 @@ func (rectangle *Rectangle) Intersects(elem Figure) bool {
 			rectangle.End.Y > other.Start.Y
 
 	case *Point:
-		return rectangle.Start.X < other.Vector.X &&
-			rectangle.End.X > other.Vector.X &&
-			rectangle.Start.Y < other.Vector.Y &&
-			rectangle.End.Y > other.Vector.Y
+		return rectangle.Start.X < other.X &&
+			rectangle.End.X > other.X &&
+			rectangle.Start.Y < other.Y &&
+			rectangle.End.Y > other.Y
 	case *Line, *Segment:
 		bot, right, top, left := rectangle.Sides()
 		return bot.Intersects(other) || right.Intersects(other) || top.Intersects(other) || left.Intersects(other)
 	case *Circle:
 		// Get the distance between the center of the circle and the center of the rectangle
-		d := rectangle.Start.Vector.Plus(rectangle.End.Vector).Times(0.5).Minus(other.Center.Vector).Abs()
+		d := rectangle.Start.Plus(rectangle.End).Times(0.5).Minus(other.Center).Abs()
 		// The distance is bigger than the radius and half the length/height of the rectangle
 		if d.X > rectangle.Width/2+other.Radius || d.Y > rectangle.Height/2+other.Radius {
 			return false
@@ -73,6 +73,14 @@ func (rectangle *Rectangle) Sides() (bot *Segment, right *Segment, top *Segment,
 		NewSegment(NewPoint(rectangle.End.X, rectangle.Start.Y), rectangle.End),
 		NewSegment(rectangle.Start, NewPoint(rectangle.End.X, rectangle.Start.Y)),
 		NewSegment(rectangle.Start, NewPoint(rectangle.Start.X, rectangle.End.Y))
+}
+func (rectangle *Rectangle) GetCenter() *Point {
+	return rectangle.Start.Plus(rectangle.End).Times(0.5)
+}
+func (rectangle *Rectangle) MoveTo(where *Point) {
+	n := rectangle.GetCenter().Minus(where)
+	rectangle.Start = rectangle.Start.Plus(n)
+	rectangle.End = rectangle.End.Plus(n)
 }
 
 func (rectangle *Rectangle) Draw(ctx js.Value) {

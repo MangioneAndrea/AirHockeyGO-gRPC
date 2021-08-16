@@ -3,36 +3,30 @@ package figures
 import (
 	"math"
 	"syscall/js"
-
-	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
 )
 
 type Point struct {
-	Vector *vectors.Vector2D
-	X      float64
-	Y      float64
+	X float64
+	Y float64
 }
 
 func NewPoint(x float64, y float64) *Point {
-	return &Point{Vector: &vectors.Vector2D{X: x, Y: y}, X: x, Y: y}
-}
-func NewPoint2(vector *vectors.Vector2D) *Point {
-	return &Point{Vector: vector, X: vector.X, Y: vector.Y}
+	return &Point{X: x, Y: y}
 }
 
 func (point *Point) Intersects(elem Figure) bool {
 	switch other := (elem).(type) {
 	case *Point:
-		return point.Vector.X == other.Vector.X && point.Vector.Y == other.Vector.Y
+		return point.X == other.X && point.Y == other.Y
 	case *Rectangle:
-		return other.Start.X < point.Vector.X &&
-			other.End.X > point.Vector.X &&
-			other.Start.Y < point.Vector.Y &&
-			other.End.Y > point.Vector.Y
+		return other.Start.X < point.X &&
+			other.End.X > point.X &&
+			other.Start.Y < point.Y &&
+			other.End.Y > point.Y
 	case *Circle:
 		// Get the distance between the center and the point
-		dx := math.Abs(point.Vector.X - other.Center.X)
-		dy := math.Abs(point.Vector.Y - other.Center.Y)
+		dx := math.Abs(point.X - other.Center.X)
+		dy := math.Abs(point.Y - other.Center.Y)
 		// The distance is larger than a square wrapping the circle
 		if dx > other.Radius || dy > other.Radius {
 			return false
@@ -56,7 +50,7 @@ func (point *Point) Intersects(elem Figure) bool {
 }
 
 func (point *Point) DistanceToPoint(other *Point) float64 {
-	return point.Vector.DistanceTo(other.Vector)
+	return point.DistanceTo(other)
 }
 func (point *Point) DistanceToLine(line *Line) float64 {
 	return line.NearestPointTo(point).DistanceToPoint(point)
@@ -69,8 +63,47 @@ func (point *Point) SegmentTo(other *Point) *Segment {
 	return NewSegment(point, other)
 }
 
+func (point *Point) GetCenter() *Point {
+	return point
+}
+func (point *Point) MoveTo(where *Point) {
+	point.X, point.Y = where.Values()
+}
+
 func (point *Point) Draw(ctx js.Value) {
 	ctx.Call("beginPath")
 	ctx.Call("arc", point.X, point.Y, 1, 0, 2*math.Pi)
 	ctx.Call("stroke")
+}
+
+func (point *Point) Values() (float64, float64) {
+	return point.X, point.Y
+}
+
+func (point *Point) SquaredSize() float64 {
+	return math.Pow(point.X, 2) + math.Pow(point.Y, 2)
+}
+
+func (point *Point) Size() float64 {
+	return math.Sqrt(point.SquaredSize())
+}
+
+func (point *Point) Plus(other *Point) *Point {
+	return &Point{X: point.X + other.X, Y: point.Y + other.Y}
+}
+func (point *Point) Minus(other *Point) *Point {
+	return &Point{X: point.X - other.X, Y: point.Y - other.Y}
+}
+func (point *Point) Abs() *Point {
+	return &Point{X: math.Abs(point.X), Y: math.Abs(point.Y)}
+}
+func (point *Point) Dot(other *Point) float64 {
+	return point.X*other.X + point.Y*other.Y
+}
+func (point *Point) Times(other float64) *Point {
+	return &Point{X: point.X * other, Y: point.Y * other}
+}
+
+func (point *Point) DistanceTo(other *Point) float64 {
+	return point.Minus(other).Size()
 }

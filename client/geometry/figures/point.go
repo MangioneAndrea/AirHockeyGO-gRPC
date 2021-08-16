@@ -2,6 +2,7 @@ package figures
 
 import (
 	"math"
+	"syscall/js"
 
 	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
 )
@@ -66,4 +67,10 @@ func (point *Point) LineTo(other *Point) *Line {
 }
 func (point *Point) SegmentTo(other *Point) *Segment {
 	return NewSegment(point, other)
+}
+
+func (point *Point) Draw(ctx js.Value) {
+	ctx.Call("beginPath")
+	ctx.Call("arc", point.X, point.Y, 1, 0, 2*math.Pi)
+	ctx.Call("stroke")
 }

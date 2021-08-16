@@ -2,6 +2,7 @@ package figures
 
 import (
 	"math"
+	"syscall/js"
 
 	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
 )
@@ -72,30 +73,8 @@ func (circle *Circle) Intersects(elem Figure) bool {
 	return false
 }
 
-func (circle *Circle) Draw() {
-	// Memoize calc of the circle to speed up the process
-	if circle.memoizedPoints == nil || len(circle.memoizedPoints) == 0 {
-		for theta := float64(0); theta < 2*math.Pi; theta += math.Pi * 0.1 {
-			x := +float64(circle.Radius) * math.Cos(theta)
-			y := -float64(circle.Radius) * math.Sin(theta)
-			circle.memoizedPoints = append(circle.memoizedPoints, &vectors.Vector2D{X: x, Y: y})
-		}
-	}
-	/*
-		for index, vector := range circle.memoizedPoints {
-			var other *vectors.Vector2D
-			if index == 0 {
-				other = circle.memoizedPoints[len(circle.memoizedPoints)-1]
-			} else {
-				other = circle.memoizedPoints[index-1]
-			}
-				ebitenutil.DrawLine(
-					screen,
-					float64(circle.Center.X)+other.X,
-					float64(circle.Center.Y)-other.Y,
-					float64(circle.Center.X)+vector.X,
-					float64(circle.Center.Y)-vector.Y,
-					color.White)
-		}
-	*/
+func (circle *Circle) Draw(ctx js.Value) {
+	ctx.Call("beginPath")
+	ctx.Call("arc", circle.Center.X, circle.Center.Y, circle.Radius, 0, 2*math.Pi)
+	ctx.Call("stroke")
 }

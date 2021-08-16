@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
 	"image"
@@ -57,13 +57,13 @@ func (phisicSprite *PhisicSprite) Move(where *vectors.Vector2D) {
 	phisicSprite.Sprite.Hitbox.Center = figures.NewPoint2(where)
 }
 
-func (phisicSprite *PhisicSprite) Draw() {
-	if ClientDebug {
-		phisicSprite.Sprite.Hitbox.Draw()
-	}
-	if phisicSprite.Sprite.Image == nil {
-		return
-	}
+func (phisicSprite *PhisicSprite) Draw() { /*
+		if ClientDebug {
+			phisicSprite.Sprite.Hitbox.Draw()
+		}
+		if phisicSprite.Sprite.Image == nil {
+			return
+		}*/
 	//phisicSprite.Sprite.Draw()
 }
 
@@ -72,14 +72,14 @@ func (sprite *Sprite) Move(where *vectors.Vector2D) {
 	sprite.Hitbox.Center = figures.NewPoint2(where)
 }
 
-func (sprite *Sprite) Draw() {
-	if ClientDebug {
-		//sprite.Hitbox.Draw(screen)
-	} /*
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(-float64(sprite.Image.Bounds().Size().X)/2, -float64(sprite.Image.Bounds().Size().X)/2)
-		op.GeoM.Rotate(float64(int(sprite.Rotation)%360) * 2 * math.Pi / 360)
-		op.GeoM.Translate(float64(sprite.Hitbox.Center.X), float64(sprite.Hitbox.Center.Y))*/
+func (sprite *Sprite) Draw() { /*
+		if ClientDebug {
+			//sprite.Hitbox.Draw(screen)
+		}
+			op := &ebiten.DrawImageOptions{}
+			op.GeoM.Translate(-float64(sprite.Image.Bounds().Size().X)/2, -float64(sprite.Image.Bounds().Size().X)/2)
+			op.GeoM.Rotate(float64(int(sprite.Rotation)%360) * 2 * math.Pi / 360)
+			op.GeoM.Translate(float64(sprite.Hitbox.Center.X), float64(sprite.Hitbox.Center.Y))*/
 	//screen.DrawImage(sprite.Image, op)
 }
 

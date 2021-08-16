@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/MangioneAndrea/airhockey/client/entity"
+	"github.com/MangioneAndrea/airhockey/client/game"
 	"github.com/MangioneAndrea/airhockey/gamepb"
 	"google.golang.org/grpc"
 )
@@ -24,11 +25,16 @@ var (
 type GUI struct {
 	scene  entity.Scene
 	canvas js.Value
+	ctx    js.Value
+}
+
+func (g *GUI) GetConnection() gamepb.PositionServiceClient {
+	return connection
 }
 
 func (g *GUI) Start() {
 	g.FitToWindow()
-	g.scene.OnConstruction()
+	g.scene.OnConstruction(g)
 	for true {
 		time.Sleep(time.Millisecond * 10)
 		g.Update()
@@ -44,7 +50,7 @@ func (g *GUI) FitToWindow() {
 }
 
 func (g *GUI) Update() error {
-	g.scene.Tick()
+	g.scene.Tick(0)
 	/*
 		if inpututil.IsKeyJustPressed(ebiten.KeyF6) {
 			ClientDebug = !ClientDebug
@@ -60,13 +66,24 @@ func (g *GUI) Update() error {
 	return nil
 }
 
-func (g *GUI) Draw(canvas js.Value) {
+func (g *GUI) Draw(ctx js.Value) {
+	g.ctx.Call("clearRect", 0, 0, screenWidth, screenHeight)
 
+	g.scene.Draw(ctx)
+	g.ctx.Set("fillStyle", "#FF0000")
+	g.ctx.Call("fillRect", 0, 0, 150, 75)
 }
 
-func (g *GUI) ChangeScene(scene entity.Scene) {
-	g.scene = scene
-	//scene.OnConstruction(screenWidth, screenHeight, g)
+func (g *GUI) GetHeight() float32 {
+	return float32(screenHeight)
+}
+func (g *GUI) GetWidth() float32 {
+	return float32(screenWidth)
+}
+
+func (g *GUI) ChangeScene(scene *entity.Scene) {
+	g.scene = *scene
+	g.scene.OnConstruction(g)
 }
 
 func main() {
@@ -80,12 +97,9 @@ func main() {
 
 	g := &GUI{
 		canvas: js.Global().Get("document").Call("getElementById", "main"),
+		ctx:    js.Global().Get("document").Call("getElementById", "main").Call("getContext", "2d"),
+		scene:  &game.MainMenu{},
 	}
-	/*
-		js.Global().Get("document").Call("addEventListener", "unload", js.New(func(args []js.Value) {
-			g.alive = false
-		}))
-	*/
 	go g.Start()
 
 	<-make(chan int)

@@ -1,6 +1,9 @@
 package entity
 
+import "syscall/js"
+
 type Entity interface {
 	Tick(delta int)
-	OnConstruction(interface{})
+	Draw(ctx js.Value)
+	OnConstruction(s *SceneController)
 }

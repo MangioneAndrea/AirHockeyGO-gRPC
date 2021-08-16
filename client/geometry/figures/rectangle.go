@@ -3,6 +3,7 @@ package figures
 import (
 	"image/color"
 	"math"
+	"syscall/js"
 )
 
 type Rectangle struct {
@@ -74,13 +75,6 @@ func (rectangle *Rectangle) Sides() (bot *Segment, right *Segment, top *Segment,
 		NewSegment(rectangle.Start, NewPoint(rectangle.Start.X, rectangle.End.Y))
 }
 
-func (rectangle *Rectangle) Draw() { /*
-		if rectangle.Color == nil {
-			rectangle.Color = color.White
-		}
-		bot, right, top, left := rectangle.Sides()
-		ebitenutil.DrawLine(screen, bot.Start.X, bot.Start.Y, bot.End.X, bot.End.Y, rectangle.Color)
-		ebitenutil.DrawLine(screen, right.Start.X, right.Start.Y, right.End.X, right.End.Y, rectangle.Color)
-		ebitenutil.DrawLine(screen, top.Start.X, top.Start.Y, top.End.X, top.End.Y, rectangle.Color)
-		ebitenutil.DrawLine(screen, left.Start.X, left.Start.Y, left.End.X, left.End.Y, rectangle.Color)*/
+func (rectangle *Rectangle) Draw(ctx js.Value) {
+	ctx.Call("strokeRect", rectangle.Start.X, rectangle.Start.Y, rectangle.End.X, rectangle.End.Y)
 }

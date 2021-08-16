@@ -1,15 +1,11 @@
 package entity
 
-import "github.com/MangioneAndrea/airhockey/client/geometry/figures"
+import "syscall/js"
 
-type Actor struct {
-	Collisions bool
-	Hitbox     figures.Figure
-}
-
-func (s *Actor) OnConstruction(interface{}) {
-
-}
-func (s *Actor) Tick(delta int) {
-
+type Actor interface {
+	HasCollisions() bool
+	GetHitbox(delta int)
+	Tick(delta int)
+	Draw(ctx js.Value)
+	OnConstruction(s *SceneController)
 }

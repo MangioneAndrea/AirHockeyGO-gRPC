@@ -2,6 +2,7 @@ package figures
 
 import (
 	"math"
+	"syscall/js"
 )
 
 type Segment struct {
@@ -74,4 +75,11 @@ func (segment *Segment) YIntercept() float64 {
 
 func (segment *Segment) ToLine() *Line {
 	return &Line{Start: segment.Start, Direction: segment.End, slope: segment.slope, yIntercept: segment.yIntercept}
+}
+
+func (segment *Segment) Draw(ctx js.Value) {
+	ctx.Call("beginPath")
+	ctx.Call("moveTo", segment.Start.X, segment.Start.Y)
+	ctx.Call("lineTo", segment.End.X, segment.End.Y)
+	ctx.Call("stroke")
 }

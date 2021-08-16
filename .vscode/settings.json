@@ -2,5 +2,9 @@
     "go.useLanguageServer": true,
     "gopls": {
          "experimentalWorkspaceModule": true,
-     },
+    },
+    "go.toolsEnvVars": {
+      "GOOS":"js",
+      "GOARCH":"wasm"
+    },
  }

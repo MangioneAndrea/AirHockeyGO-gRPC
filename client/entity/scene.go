@@ -1,12 +1,10 @@
 package entity
 
-type Scene struct {
-	Actors *[]*Actor
-}
+import "syscall/js"
 
-func (s *Scene) OnConstruction(interface{}) {
-
-}
-func (s *Scene) Tick(delta int) {
-
+type Scene interface {
+	GetActors() *[]*Actor
+	Tick(delta int)
+	Draw(ctx js.Value)
+	OnConstruction(s SceneController)
 }

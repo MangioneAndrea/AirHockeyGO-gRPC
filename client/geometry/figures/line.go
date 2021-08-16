@@ -2,6 +2,7 @@ package figures
 
 import (
 	"math"
+	"syscall/js"
 )
 
 type Line struct {
@@ -50,8 +51,11 @@ func (line *Line) Intersects(elem Figure) bool {
 	return false
 }
 
-func (line *Line) Draw() {
-	//ebitenutil.DrawLine(screen, line.Start.X, line.Start.Y, line.Direction.X, line.Direction.Y, color.White)
+func (line *Line) Draw(ctx js.Value) {
+	ctx.Call("beginPath")
+	ctx.Call("moveTo", line.Start.X, line.Start.Y)
+	ctx.Call("lineTo", line.Direction.X, line.Direction.Y)
+	ctx.Call("stroke")
 }
 
 func (line *Line) SnapSegment(bounds *Rectangle) *Segment {

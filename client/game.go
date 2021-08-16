@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"image/color"
 	"io"
 	"log"
 	"math"
@@ -11,9 +10,6 @@ import (
 	"github.com/MangioneAndrea/airhockey/client/geometry/figures"
 	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
 	"github.com/MangioneAndrea/airhockey/gamepb"
-
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 type GameMode int
@@ -41,8 +37,8 @@ func (g *Game) Tick() error {
 	if !constructed {
 		return nil
 	}
-	cursorX, cursorY := ebiten.CursorPosition()
-	delta := ebiten.CurrentTPS() / 60
+	cursorX, cursorY := .0, .0 //ebiten.CursorPosition()
+	delta := 30.               //ebiten.CurrentTPS() / 60
 	if delta == 0 {
 		return nil
 	}
@@ -69,24 +65,26 @@ func (g *Game) Tick() error {
 	return nil
 }
 
-func (g *Game) Draw(screen *ebiten.Image) {
+func (g *Game) Draw() {
 	if ClientDebug {
-		s := player.Hitbox.Center.LineTo(ball.Sprite.Hitbox.Center).SnapSegment(screen, contours)
+		s := player.Hitbox.Center.LineTo(ball.Sprite.Hitbox.Center).SnapSegment(contours)
 
 		if s != nil {
-			ebitenutil.DrawLine(screen,
-				s.Start.X,
-				s.Start.Y,
-				s.End.X,
-				s.End.Y,
-				color.White)
+			/*
+				ebitenutil.DrawLine(screen,
+					s.Start.X,
+					s.Start.Y,
+					s.End.X,
+					s.End.Y,
+					color.White)
+			*/
 		}
-		contours.Draw(screen)
+		//contours.Draw(screen)
 	}
-	player.Draw(screen)
-	ball.Draw(screen)
-	opponent.Draw(screen)
-	divider.Draw(screen)
+	//player.Draw(screen)
+	//ball.Draw(screen)
+	//opponent.Draw(screen)
+	//divider.Draw(screen)
 }
 
 func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error {
@@ -142,8 +140,8 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 			radius,
 		),
 	}
-	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("Airhockey go!")
+	//ebiten.SetWindowSize(screenWidth, screenHeight)
+	//ebiten.SetWindowTitle("Airhockey go!")
 	constructed = true
 	return nil
 }

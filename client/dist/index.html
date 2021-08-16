@@ -1,0 +1,20 @@
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<script src="wasm_exec.js"></script>
+	<script>
+		const go = new Go();
+		WebAssembly.instantiateStreaming(
+			fetch("main.wasm"),
+			go.importObject).then((result) => {
+				go.run(result.instance);
+			});
+	</script>
+</head>
+
+<body>
+	<canvas id="main" width="100" height="100" style="border:1px solid #000000;"></canvas>
+</body>
+
+</html>

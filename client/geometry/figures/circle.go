@@ -1,12 +1,9 @@
 package figures
 
 import (
-	"image/color"
 	"math"
 
 	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 type Circle struct {
@@ -75,7 +72,7 @@ func (circle *Circle) Intersects(elem Figure) bool {
 	return false
 }
 
-func (circle *Circle) Draw(screen *ebiten.Image) {
+func (circle *Circle) Draw() {
 	// Memoize calc of the circle to speed up the process
 	if circle.memoizedPoints == nil || len(circle.memoizedPoints) == 0 {
 		for theta := float64(0); theta < 2*math.Pi; theta += math.Pi * 0.1 {
@@ -84,19 +81,21 @@ func (circle *Circle) Draw(screen *ebiten.Image) {
 			circle.memoizedPoints = append(circle.memoizedPoints, &vectors.Vector2D{X: x, Y: y})
 		}
 	}
-	for index, vector := range circle.memoizedPoints {
-		var other *vectors.Vector2D
-		if index == 0 {
-			other = circle.memoizedPoints[len(circle.memoizedPoints)-1]
-		} else {
-			other = circle.memoizedPoints[index-1]
+	/*
+		for index, vector := range circle.memoizedPoints {
+			var other *vectors.Vector2D
+			if index == 0 {
+				other = circle.memoizedPoints[len(circle.memoizedPoints)-1]
+			} else {
+				other = circle.memoizedPoints[index-1]
+			}
+				ebitenutil.DrawLine(
+					screen,
+					float64(circle.Center.X)+other.X,
+					float64(circle.Center.Y)-other.Y,
+					float64(circle.Center.X)+vector.X,
+					float64(circle.Center.Y)-vector.Y,
+					color.White)
 		}
-		ebitenutil.DrawLine(
-			screen,
-			float64(circle.Center.X)+other.X,
-			float64(circle.Center.Y)-other.Y,
-			float64(circle.Center.X)+vector.X,
-			float64(circle.Center.Y)-vector.Y,
-			color.White)
-	}
+	*/
 }

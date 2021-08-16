@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"syscall/js"
 
 	"github.com/MangioneAndrea/airhockey/client/geometry/figures"
 	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
@@ -72,7 +73,7 @@ func (sprite *Sprite) Move(where *vectors.Vector2D) {
 	sprite.Hitbox.Center = figures.NewPoint2(where)
 }
 
-func (sprite *Sprite) Draw() { /*
+func (sprite *Sprite) Draw(ctx js.Value) { /*
 		if ClientDebug {
 			//sprite.Hitbox.Draw(screen)
 		}
@@ -81,40 +82,6 @@ func (sprite *Sprite) Draw() { /*
 			op.GeoM.Rotate(float64(int(sprite.Rotation)%360) * 2 * math.Pi / 360)
 			op.GeoM.Translate(float64(sprite.Hitbox.Center.X), float64(sprite.Hitbox.Center.Y))*/
 	//screen.DrawImage(sprite.Image, op)
-}
-
-type Button struct {
-	Position  vectors.Vector2D
-	Image     *image.Image
-	OnClick   func()
-	isClicked bool
-}
-
-func (button *Button) Draw(screen *image.Image) { /*
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(float64(button.Position.X), float64(button.Position.Y))*/
-	//screen.DrawImage(button.Image, op)
-}
-
-func (button *Button) CheckClicked() {
-	/*
-		if button.OnClick == nil {
-			return
-		}
-		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-			x, y := ebiten.CursorPosition()
-			if !button.isClicked &&
-				figures.NewRectangle(
-					figures.NewPoint2(&button.Position),
-					float64(button.Image.Bounds().Dx()),
-					float64(button.Image.Bounds().Dy())).Intersects(figures.NewPoint(float64(x), float64(y))) {
-				button.OnClick()
-			}
-			button.isClicked = true
-		} else {
-			button.isClicked = false
-		}
-	*/
 }
 
 func GetImageFromFilePath(filePath string) (image.Image, error) {

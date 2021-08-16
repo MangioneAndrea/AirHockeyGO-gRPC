@@ -20,7 +20,7 @@ func NewRectangle(start *Point, width float64, height float64) *Rectangle {
 		End:    NewPoint(start.X+width, start.Y+height),
 		Width:  width,
 		Height: height,
-		Color:  color.White,
+		Color:  color.Black,
 	}
 }
 

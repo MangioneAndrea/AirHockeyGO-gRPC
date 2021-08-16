@@ -1,52 +1,39 @@
 package game
 
 import (
-	"context"
-	"log"
 	"syscall/js"
 
-	"github.com/MangioneAndrea/airhockey/client/entity"
-	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
-	"github.com/MangioneAndrea/airhockey/gamepb"
+	"github.com/MangioneAndrea/airhockey/client/entities"
+	"github.com/MangioneAndrea/airhockey/client/entities/actors"
+	"github.com/MangioneAndrea/airhockey/client/geometry/figures"
 )
 
 var (
-	button *Button
+	button *actors.Button
 )
 
 type MainMenu struct {
-	actors *[]*entity.Actor
+	actors []entities.Actor
 }
 
-func (g *MainMenu) GetActors() *[]*entity.Actor {
-	return g.actors
+func (g *MainMenu) GetActors() *[]entities.Actor {
+	return &g.actors
 }
 
 func (g *MainMenu) Tick(delta int) {
-	button.CheckClicked()
 }
 
 func (g *MainMenu) Draw(ctx js.Value) {
-	for _, actor := range *g.actors {
-		(*actor).Draw(canvas)
+	for _, actor := range g.actors {
+		actor.Draw(ctx)
 	}
 }
 
-func (g *MainMenu) OnConstruction(c entity.SceneController) {
-	/*
-		buttonImage, err := GetImageFromFilePath("client/graphics/button/idle.png")
-		if err != nil {
-			log.Fatal(err)
-		}
-	*/
-	button = &Button{
-		Position: vectors.Vector2D{X: float64(c.GetWidth() / 2), Y: float64(c.GetHeight() / 2)}, OnClick: func() {
-			_, err := c.GetConnection().RequestGame(context.Background(), &gamepb.GameRequest{})
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			//c.ChangeScene(&Game{token})
-		},
-	}
+func (g *MainMenu) OnConstruction(c entities.SceneController) {
+	button = actors.NewButton(
+		figures.NewCircle(figures.NewPoint(75, 75), 50),
+		func() { println("clicked") },
+	)
+	button.OnConstruction(c)
+	g.actors = append(g.actors, button)
 }

@@ -1,9 +1,9 @@
-package entity
+package entities
 
 import "syscall/js"
 
 type Scene interface {
-	GetActors() *[]*Actor
+	GetActors() *[]Actor
 	Tick(delta int)
 	Draw(ctx js.Value)
 	OnConstruction(s SceneController)

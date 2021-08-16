@@ -5,7 +5,7 @@ import (
 	"syscall/js"
 	"time"
 
-	"github.com/MangioneAndrea/airhockey/client/entity"
+	"github.com/MangioneAndrea/airhockey/client/entities"
 	"github.com/MangioneAndrea/airhockey/client/game"
 	"github.com/MangioneAndrea/airhockey/gamepb"
 	"google.golang.org/grpc"
@@ -23,7 +23,7 @@ var (
 )
 
 type GUI struct {
-	scene  entity.Scene
+	scene  entities.Scene
 	canvas js.Value
 	ctx    js.Value
 }
@@ -38,7 +38,7 @@ func (g *GUI) Start() {
 	for true {
 		time.Sleep(time.Millisecond * 10)
 		g.Update()
-		g.Draw(g.canvas)
+		g.Draw(g.ctx)
 	}
 }
 
@@ -68,10 +68,7 @@ func (g *GUI) Update() error {
 
 func (g *GUI) Draw(ctx js.Value) {
 	g.ctx.Call("clearRect", 0, 0, screenWidth, screenHeight)
-
 	g.scene.Draw(ctx)
-	g.ctx.Set("fillStyle", "#FF0000")
-	g.ctx.Call("fillRect", 0, 0, 150, 75)
 }
 
 func (g *GUI) GetHeight() float32 {
@@ -80,8 +77,14 @@ func (g *GUI) GetHeight() float32 {
 func (g *GUI) GetWidth() float32 {
 	return float32(screenWidth)
 }
+func (g *GUI) GetCanvas() js.Value {
+	return g.canvas
+}
+func (g *GUI) GetCtx() js.Value {
+	return g.ctx
+}
 
-func (g *GUI) ChangeScene(scene *entity.Scene) {
+func (g *GUI) ChangeScene(scene *entities.Scene) {
 	g.scene = *scene
 	g.scene.OnConstruction(g)
 }

@@ -7,7 +7,7 @@ import (
 	"log"
 	"math"
 
-	"github.com/MangioneAndrea/airhockey/client/entity"
+	"github.com/MangioneAndrea/airhockey/client/entities"
 	"github.com/MangioneAndrea/airhockey/client/geometry/figures"
 	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
 	"github.com/MangioneAndrea/airhockey/gamepb"
@@ -35,7 +35,7 @@ type Game struct {
 	height, width float32
 }
 
-func (g *Game) GetActors() *[]*entity.Actor {
+func (g *Game) GetActors() *[]*entities.Actor {
 	return nil
 }
 
@@ -92,7 +92,7 @@ func (g *Game) Draw() {
 	//divider.Draw(screen)
 }
 
-func (g *Game) OnConstruction(s entity.SceneController) {
+func (g *Game) OnConstruction(s entities.SceneController) {
 
 	g.height = s.GetHeight()
 	g.width = s.GetWidth()

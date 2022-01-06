@@ -3,6 +3,7 @@ module github.com/MangioneAndrea/airhockey
 go 1.16
 
 require (
+	github.com/MangioneAndrea/GoUtils v1.0.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hajimehoshi/ebiten v1.12.12 // indirect
 	github.com/hajimehoshi/ebiten/v2 v2.2.3

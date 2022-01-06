@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	Util "github.com/MangioneAndrea/GoUtils"
 	"io"
 	"log"
 	"net"
@@ -51,10 +52,11 @@ func main() {
 
 	go func() {
 		for {
-			time.Sleep(30 * time.Second)
+			time.Sleep(5 * time.Second)
 			for key, element := range server.games {
 				printDebug("Time elapsed %v \n", time.Since(time.Unix((element.LastUpdate), 0)))
 				if time.Since(time.Unix((element.LastUpdate), 0)) > 5*time.Second {
+					Util.PrintErrorIfNotNil(key, "Removing game due to inactivity")
 					delete(server.games, key)
 				}
 			}
@@ -83,9 +85,12 @@ func (server *Server) RequestGame(ctx context.Context, v *gamepb.GameRequest) (*
 			GameHash:   game.GameHash,
 		}
 		server.games[game.GameHash] = game
+		Util.PrintSuccessIfNotNil(game.Token2.GameHash, "Joining game")
 		return game.Token2, nil
 	} else {
-		return server.CreateGame().Token1, nil
+		token := server.CreateGame().Token1
+		Util.PrintSuccessIfNotNil(token.GameHash, "Creating game")
+		return token, nil
 	}
 }
 

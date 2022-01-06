@@ -13,7 +13,7 @@ func generateId() string {
 	return fmt.Sprint(seededRand.Int())
 }
 
-const DEBUG = true
+const DEBUG = false
 
 func printDebug(msg string, props ...interface{}) {
 	if DEBUG {

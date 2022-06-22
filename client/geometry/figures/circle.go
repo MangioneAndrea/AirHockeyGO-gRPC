@@ -58,15 +58,7 @@ func (circle *Circle) Intersects(elem Figure) bool {
 	case *Segment:
 		p := other.ToLine().NearestPointTo(circle.Center)
 		// If the point is not in the segment, take the nearest end
-		if !p.Intersects(other) {
-			if other.Start.Vector.DistanceTo(p.Vector) < other.End.Vector.DistanceTo(p.Vector) {
-				p = other.Start
-			} else {
-				p = other.End
-			}
-		}
-		// if the nearest point is in the circle, the segment intersects it
-		return other.Intersects(p)
+		return p.Intersects(circle)
 	case *Line:
 		// If the distance of the nearest point of the line is smaller than the radius --> intersection
 		return circle.Center.DistanceToLine(other) < circle.Radius

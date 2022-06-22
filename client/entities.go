@@ -30,7 +30,7 @@ type Sprite struct {
 	Speed                   float64
 	Rotation                float64
 	Image                   *ebiten.Image
-	RegisteredIntersections map[*Sprite]bool
+	RegisteredIntersections map[figures.Figure]bool
 }
 
 type PhisicSprite struct {
@@ -40,9 +40,37 @@ type PhisicSprite struct {
 }
 
 func (phisicSprite *PhisicSprite) Tick() {
-	for _, item := range *phisicSprite.Collisions {
-		if phisicSprite.Sprite.Hitbox.Intersects(item) {
-			fmt.Println("collision with wall")
+	phisicSprite.Sprite.Speed *= 0.995
+	if phisicSprite.Sprite.Speed > 0 {
+		phisicSprite.Sprite.Speed -= 0.01
+	} else {
+		phisicSprite.Sprite.Speed += 0.01
+	}
+	for index, item := range *phisicSprite.Collisions {
+		if _, firstIntersection := phisicSprite.Sprite.Intersects(item); firstIntersection {
+
+			switch coll := (item).(type) {
+			case *figures.Circle:
+			case *figures.Segment:
+				slope := math.Abs(float64(int(coll.Slope()) % 1000))
+				x := slope / 1000
+				y := 1 - math.Min(slope, 1)
+				phisicSprite.Bounce(x, y)
+				if ClientDebug {
+					fmt.Printf("first collision with segment at index %d with slope %f \n", index, slope)
+				}
+			case *figures.Line:
+				slope := math.Abs(float64(int(coll.Slope()) % 1000))
+				x := slope / 1000
+				y := 1 - math.Min(slope, 1)
+				phisicSprite.Bounce(x, y)
+				if ClientDebug {
+					fmt.Printf("first collision with line at index %d with slope %f \n", index, slope)
+				}
+			}
+
+			//phisicSprite.AddForce(phisicSprite.Sprite.Hitbox.Center.Vector.Minus(player.Hitbox.Center.Vector), player.Speed)
+
 		}
 	}
 
@@ -50,6 +78,15 @@ func (phisicSprite *PhisicSprite) Tick() {
 		phisicSprite.Sprite.Hitbox.Center.Vector.Plus(
 			phisicSprite.Direction.Times(phisicSprite.Sprite.Speed / 100),
 		))
+}
+
+func (phisicSprite *PhisicSprite) Bounce(x, y float64) {
+	if x > 0.05 {
+		phisicSprite.Direction.X *= -x
+	}
+	if y > 0.05 {
+		phisicSprite.Direction.Y *= -y
+	}
 }
 
 func (phisicSprite *PhisicSprite) AddForce(force *vectors.Vector2D, speed float64) {
@@ -70,8 +107,8 @@ func (phisicSprite *PhisicSprite) Draw(screen *ebiten.Image) {
 	phisicSprite.Sprite.Draw(screen)
 }
 
-func (sprite *Sprite) Intersects(with *Sprite) (intersects, isFirstIntersection bool) {
-	intersects = sprite.Hitbox.Intersects(with.Hitbox)
+func (sprite *Sprite) Intersects(with figures.Figure) (intersects, isFirstIntersection bool) {
+	intersects = sprite.Hitbox.Intersects(with)
 	if intersects && !sprite.isIntersectionRegistered(with) {
 		if ClientDebug {
 			fmt.Println("registering intersection")
@@ -89,15 +126,11 @@ func (sprite *Sprite) Intersects(with *Sprite) (intersects, isFirstIntersection 
 	return intersects, isFirstIntersection
 }
 
-func (sprite *Sprite) isIntersectionRegistered(with *Sprite) bool {
+func (sprite *Sprite) isIntersectionRegistered(with figures.Figure) bool {
 	if intersects, ok := sprite.RegisteredIntersections[with]; ok {
 		return ok && intersects
 	}
 	return false
-}
-
-func (sprite *Sprite) Consu(with *Sprite) {
-	sprite.RegisteredIntersections[with] = false
 }
 
 func (sprite *Sprite) Move(where *vectors.Vector2D) {

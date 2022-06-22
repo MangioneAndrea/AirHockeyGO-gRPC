@@ -56,7 +56,7 @@ func (g *Game) Tick() error {
 		Vector: &gamepb.Vector2D{X: int32(player.Hitbox.Center.X), Y: int32(player.Hitbox.Center.Y)},
 		Token:  g.token,
 	})
-	_, firstIntersection := player.Intersects(ball.Sprite)
+	_, firstIntersection := player.Intersects(ball.Sprite.Hitbox)
 	if firstIntersection {
 		ball.AddForce(ball.Sprite.Hitbox.Center.Vector.Minus(player.Hitbox.Center.Vector), player.Speed)
 	}
@@ -119,13 +119,6 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 
 	bot, right, top, left := contours.Sides()
 
-	ball = PhisicSprite{Sprite: &Sprite{
-		Hitbox: figures.NewCircle(figures.NewPoint(float64(screenWidth)/2, float64(screenHeight)/1.3), 15),
-		Image:  goo,
-	},
-		Direction:  &vectors.Vector2D{X: float64(screenWidth) / 2, Y: float64(screenHeight) / 1.3},
-		Collisions: &[]figures.Figure{bot, right, top, left},
-	}
 	radius := math.Max(float64(goo.Bounds().Size().X)/2, float64(goo.Bounds().Size().Y)/2)
 	player = Sprite{
 		Hitbox: figures.NewCircle(
@@ -133,7 +126,7 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 			radius,
 		),
 		Image:                   goo,
-		RegisteredIntersections: make(map[*Sprite]bool),
+		RegisteredIntersections: make(map[figures.Figure]bool),
 	}
 	opponent = Sprite{
 		Image: goo,
@@ -141,6 +134,14 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 			figures.NewPoint(float64(screenWidth/2), float64(radius+25)),
 			radius,
 		),
+	}
+	ball = PhisicSprite{Sprite: &Sprite{
+		Hitbox:                  figures.NewCircle(figures.NewPoint(float64(screenWidth)/2, float64(screenHeight)/1.3), 15),
+		Image:                   goo,
+		RegisteredIntersections: make(map[figures.Figure]bool),
+	},
+		Direction:  &vectors.Vector2D{X: float64(screenWidth) / 2, Y: float64(screenHeight) / 1.3},
+		Collisions: &[]figures.Figure{bot, right, top, left, player.Hitbox, opponent.Hitbox},
 	}
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Airhockey go!")

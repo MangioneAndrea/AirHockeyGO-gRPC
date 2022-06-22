@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	_ "image/png"
 	"log"
@@ -25,10 +26,11 @@ type Intersectable interface {
 }
 
 type Sprite struct {
-	Hitbox   *figures.Circle
-	Speed    float64
-	Rotation float64
-	Image    *ebiten.Image
+	Hitbox                  *figures.Circle
+	Speed                   float64
+	Rotation                float64
+	Image                   *ebiten.Image
+	RegisteredIntersections map[*Sprite]bool
 }
 
 type PhisicSprite struct {
@@ -40,7 +42,7 @@ type PhisicSprite struct {
 func (phisicSprite *PhisicSprite) Tick() {
 	for _, item := range *phisicSprite.Collisions {
 		if phisicSprite.Sprite.Hitbox.Intersects(item) {
-			//fmt.Println("collision with wall")
+			fmt.Println("collision with wall")
 		}
 	}
 
@@ -66,6 +68,36 @@ func (phisicSprite *PhisicSprite) Draw(screen *ebiten.Image) {
 		return
 	}
 	phisicSprite.Sprite.Draw(screen)
+}
+
+func (sprite *Sprite) Intersects(with *Sprite) (intersects, isFirstIntersection bool) {
+	intersects = sprite.Hitbox.Intersects(with.Hitbox)
+	if intersects && !sprite.isIntersectionRegistered(with) {
+		if ClientDebug {
+			fmt.Println("registering intersection")
+		}
+		sprite.RegisteredIntersections[with] = true
+		isFirstIntersection = true
+	}
+	if !intersects && sprite.isIntersectionRegistered(with) {
+		if ClientDebug {
+			fmt.Println("unregistering intersection")
+		}
+		sprite.RegisteredIntersections[with] = false
+	}
+
+	return intersects, isFirstIntersection
+}
+
+func (sprite *Sprite) isIntersectionRegistered(with *Sprite) bool {
+	if intersects, ok := sprite.RegisteredIntersections[with]; ok {
+		return ok && intersects
+	}
+	return false
+}
+
+func (sprite *Sprite) Consu(with *Sprite) {
+	sprite.RegisteredIntersections[with] = false
 }
 
 func (sprite *Sprite) Move(where *vectors.Vector2D) {

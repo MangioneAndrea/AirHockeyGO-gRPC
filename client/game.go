@@ -56,11 +56,10 @@ func (g *Game) Tick() error {
 		Vector: &gamepb.Vector2D{X: int32(player.Hitbox.Center.X), Y: int32(player.Hitbox.Center.Y)},
 		Token:  g.token,
 	})
-
-	if player.Hitbox.Intersects(ball.Sprite.Hitbox) {
+	_, firstIntersection := player.Intersects(ball.Sprite)
+	if firstIntersection {
 		ball.AddForce(ball.Sprite.Hitbox.Center.Vector.Minus(player.Hitbox.Center.Vector), player.Speed)
 	}
-
 	if err != nil {
 		fmt.Printf("Error while sending %v\n", err)
 	}
@@ -133,7 +132,8 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 			figures.NewPoint(float64(screenWidth/2), float64(screenHeight)-radius-25),
 			radius,
 		),
-		Image: goo,
+		Image:                   goo,
+		RegisteredIntersections: make(map[*Sprite]bool),
 	}
 	opponent = Sprite{
 		Image: goo,

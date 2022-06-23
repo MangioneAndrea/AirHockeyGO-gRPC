@@ -2,7 +2,28 @@
 
 Simple standalone app of airhockey fully implemented in go and gRPC using ebiten
 
-## Phisics
+# Setup
+## Requirements
+- Go 1.16 or newer
+- protobuf 3
+- github.com/envoyproxy/protoc-gen-validate
+## How to run
+- In the root folder run `go mod tidy`
+- Windows
+  - Run `.\generate.bat`
+  - Start the server
+- Linux/MacOs
+  - Rename the file `generate.bat` to `generate.sh`
+  - Run `sh generate.sh`
+
+- Run `server(.exe)` and `client(.exe)`
+- Enjoy!
+
+## Debug
+- On the client press `F6` to show the collisions and enable logging
+
+## Showcase
+### Physics
 
 <div style="display: flex;">
 <p style="width: 50%">
@@ -13,7 +34,7 @@ The prototype is provided with a very rudimentary collision system. It allows th
 </div>
 </div>
 
-## Network replication
+### Network replication
 
 <div style="display: flex;">
 <p style="width: 50%">
@@ -24,3 +45,4 @@ same session. The communication is implemented with grpc
 <img src="./network.gif" alt="network"  height="400"/>
 </div>
 </div>
+

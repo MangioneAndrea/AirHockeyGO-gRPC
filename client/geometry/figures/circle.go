@@ -54,11 +54,11 @@ func (circle *Circle) Intersects(elem Figure) bool {
 			return true
 		}
 		// The distance may overlap the corners of the rectangle (pitagoras)
-		return (math.Pow(d.X-other.Width/2, 2)+math.Pow(d.Y-other.Height/2, 2) <= math.Pow(circle.Radius, 2))
+		return math.Pow(d.X-other.Width/2, 2)+math.Pow(d.Y-other.Height/2, 2) <= math.Pow(circle.Radius, 2)
 	case *Segment:
 		p := other.ToLine().NearestPointTo(circle.Center)
 		// If the point is not in the segment, take the nearest end
-		return p.Intersects(circle)
+		return circle.Intersects(p)
 	case *Line:
 		// If the distance of the nearest point of the line is smaller than the radius --> intersection
 		return circle.Center.DistanceToLine(other) < circle.Radius

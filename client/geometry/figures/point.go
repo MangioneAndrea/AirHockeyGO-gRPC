@@ -65,5 +65,5 @@ func (point *Point) LineTo(other *Point) *Line {
 	return NewLine(point, other)
 }
 func (point *Point) SegmentTo(other *Point) *Segment {
-	return NewSegment(point, other)
+	return NewSegment(point, other, "")
 }

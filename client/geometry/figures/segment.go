@@ -9,10 +9,11 @@ type Segment struct {
 	End        *Point
 	slope      float64
 	yIntercept float64
+	Name       string
 }
 
-func NewSegment(start *Point, end *Point) *Segment {
-	res := &Segment{Start: start, End: end}
+func NewSegment(start *Point, end *Point, name string) *Segment {
+	res := &Segment{Start: start, End: end, Name: name}
 	if end.X == start.X {
 		res.slope = math.Inf(1)
 	} else {
@@ -73,5 +74,6 @@ func (segment *Segment) YIntercept() float64 {
 }
 
 func (segment *Segment) ToLine() *Line {
-	return &Line{Start: segment.Start, Direction: segment.End, slope: segment.slope, yIntercept: segment.yIntercept}
+	return NewLine(segment.Start, segment.End)
+	//return &Line{Start: segment.Start, Direction: segment.End, slope: segment.slope, yIntercept: segment.yIntercept}
 }

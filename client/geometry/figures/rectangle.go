@@ -71,10 +71,10 @@ func (rectangle *Rectangle) Intersects(elem Figure) bool {
 }
 
 func (rectangle *Rectangle) Sides() (bot *Segment, right *Segment, top *Segment, left *Segment) {
-	return NewSegment(NewPoint(rectangle.Start.X, rectangle.End.Y), rectangle.End),
-		NewSegment(NewPoint(rectangle.End.X, rectangle.Start.Y), rectangle.End),
-		NewSegment(rectangle.Start, NewPoint(rectangle.End.X, rectangle.Start.Y)),
-		NewSegment(rectangle.Start, NewPoint(rectangle.Start.X, rectangle.End.Y))
+	return NewSegment(NewPoint(rectangle.Start.X, rectangle.End.Y), rectangle.End, "bot"),
+		NewSegment(rectangle.End, NewPoint(rectangle.End.X, rectangle.Start.Y), "right"),
+		NewSegment(rectangle.Start, NewPoint(rectangle.End.X, rectangle.Start.Y), "top"),
+		NewSegment(rectangle.Start, NewPoint(rectangle.Start.X, rectangle.End.Y), "left")
 }
 
 func (rectangle *Rectangle) Draw(screen *ebiten.Image) {

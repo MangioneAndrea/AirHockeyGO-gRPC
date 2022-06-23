@@ -36,3 +36,7 @@ func (vector *Vector2D) Times(other float64) *Vector2D {
 func (vector *Vector2D) DistanceTo(other *Vector2D) float64 {
 	return vector.Minus(other).Size()
 }
+
+func (vector *Vector2D) Normalize() *Vector2D {
+	return vector.Times(1 / vector.Size())
+}

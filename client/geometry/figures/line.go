@@ -1,6 +1,7 @@
 package figures
 
 import (
+	"fmt"
 	"image/color"
 	"math"
 
@@ -15,15 +16,15 @@ type Line struct {
 	yIntercept float64
 }
 
-func NewLine(start *Point, direction *Point) *Line {
+func NewLine(start *Point, secondPoint *Point) *Line {
 	res := &Line{
 		Start:     start,
-		Direction: direction,
+		Direction: NewPoint2(secondPoint.Vector.Minus(start.Vector).Normalize()),
 	}
-	if direction.X == start.X {
+	if res.Direction.X == start.X {
 		res.slope = math.Inf(0)
 	} else {
-		res.slope = (direction.Y - start.Y) / (direction.X - start.X)
+		res.slope = (res.Direction.Y - start.Y) / (res.Direction.X - start.X)
 	}
 	res.yIntercept = -res.slope*start.X + start.Y
 	return res
@@ -62,7 +63,7 @@ func (line *Line) SnapSegment(screen *ebiten.Image, bounds *Rectangle) *Segment 
 	bot, right, top, left := bounds.Sides()
 	sides := []*Segment{bot, right, top, left}
 
-	points := []*Point{}
+	var points []*Point
 
 	for _, side := range sides {
 		p := line.SegmentIntersection(side)
@@ -72,10 +73,11 @@ func (line *Line) SnapSegment(screen *ebiten.Image, bounds *Rectangle) *Segment 
 	}
 
 	if len(points) != 2 {
+		fmt.Println("ui ui")
 		return nil
 	}
 
-	return NewSegment(points[0], points[1])
+	return NewSegment(points[0], points[1], "")
 }
 
 func (line *Line) Slope() float64 {
@@ -115,8 +117,9 @@ func (line *Line) SegmentIntersection(other *Segment) *Point {
 }
 
 func (line *Line) NearestPointTo(point *Point) *Point {
-	t := ((point.Vector.X-line.Start.X)*line.Direction.X + (point.Vector.Y-line.Start.Y)*line.Direction.Y) / (line.Direction.Y*line.Direction.Y + line.Direction.X*line.Direction.X)
-	Fx := line.Start.X + line.Direction.X*t
-	Fy := line.Start.Y + line.Direction.Y*t
-	return NewPoint(Fx, Fy)
+	normDir := line.Direction.Vector.Normalize()
+	lhs := point.Vector.Minus(line.Start.Vector)
+	dotp := lhs.Dot(normDir)
+	p := line.Start.Vector.Plus(normDir.Times(dotp))
+	return NewPoint(p.X, p.Y)
 }

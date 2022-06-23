@@ -70,16 +70,12 @@ func (g *Game) Tick() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	if ClientDebug {
-		s := player.Hitbox.Center.LineTo(ball.Sprite.Hitbox.Center).SnapSegment(screen, contours)
-
-		if s != nil {
-			ebitenutil.DrawLine(screen,
-				s.Start.X,
-				s.Start.Y,
-				s.End.X,
-				s.End.Y,
-				color.White)
-		}
+		ebitenutil.DrawLine(screen,
+			player.Hitbox.Center.X,
+			player.Hitbox.Center.Y,
+			ball.Sprite.Hitbox.Center.X,
+			ball.Sprite.Hitbox.Center.Y,
+			color.RGBA{R: 255, G: 0, B: 0, A: 255})
 		contours.Draw(screen)
 	}
 	player.Draw(screen)

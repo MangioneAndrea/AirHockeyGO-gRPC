@@ -31,7 +31,7 @@ func (g *MainMenu) OnConstruction(screenWidth int, screenHeight int, gui *GUI) e
 		log.Fatal(err)
 	}
 	button = &Button{
-		Position: vectors.Vector2D{X: float64(screenWidth / 2), Y: float64(screenHeight / 2)}, Image: buttonImage, OnClick: func() {
+		Position: vectors.Vector2D{X: float64(screenWidth / 2), Y: float64(screenHeight) / 1.3}, Image: buttonImage, OnClick: func() {
 			token, err := connection.RequestGame(context.Background(), &gamepb.GameRequest{})
 			if err != nil {
 				log.Fatal(err)

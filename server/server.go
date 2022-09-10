@@ -110,14 +110,27 @@ func (server *Server) UpdateStatus(stream gamepb.PositionService_UpdateStatusSer
 		game := server.games[msg.Token.GameHash]
 		if game != nil {
 			game.LastUpdate = time.Now().Unix()
-			if msg.Token.PlayerHash == game.Token1.PlayerHash {
-				game.GameStatus.Player1.X = 600 - msg.Vector.X
-				game.GameStatus.Player1.Y = 1200 - msg.Vector.Y
-			} else if msg.Token.PlayerHash == game.Token2.PlayerHash {
-				game.GameStatus.Player2.X = 600 - msg.Vector.X
-				game.GameStatus.Player2.Y = 1200 - msg.Vector.Y
+			if msg.Vector != nil {
+				if msg.Token.PlayerHash == game.Token1.PlayerHash {
+					game.GameStatus.Player1.X = 600 - msg.Vector.X
+					game.GameStatus.Player1.Y = 1200 - msg.Vector.Y
+				} else if msg.Token.PlayerHash == game.Token2.PlayerHash {
+					game.GameStatus.Player2.X = 600 - msg.Vector.X
+					game.GameStatus.Player2.Y = 1200 - msg.Vector.Y
+				}
 			}
-			stream.Send(game)
+
+			if msg.DiskStatus != nil {
+				game.GameStatus.Disk = msg.DiskStatus
+				if msg.Token.PlayerHash == game.Token2.PlayerHash {
+					game.GameStatus.Disk.Force.Y = -game.GameStatus.Disk.Force.Y
+					game.GameStatus.Disk.Force.X = -game.GameStatus.Disk.Force.X
+				}
+				game.GameStatus.Disk = msg.DiskStatus
+				fmt.Println("seinding disk position")
+			}
+			err := stream.Send(game)
+			Util.PrintErrorIfNotNil(err)
 		}
 	}
 	return nil

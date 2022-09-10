@@ -1,46 +1,52 @@
 syntax = "proto3";
 
 package gamepb;
-option go_package="/gamepb";
+option go_package = "/gamepb";
 
 message GameRequest{
-    string ip=1;
-    string gameHash=2;
+  string ip = 1;
+  string gameHash = 2;
 }
 
 message Vector2D{
-    int32 x=1;
-    int32 y=2;
+  int32 x = 1;
+  int32 y = 2;
 }
 
 message Token{
-    string playerHash=1;
-    string gameHash=2;
+  string playerHash = 1;
+  string gameHash = 2;
 }
 
 message Game{
-    string gameHash=1;
-    Token token1=2;
-    Token token2=3;
-    GameStatus gameStatus=4;
-    int64 lastUpdate=5;
+  string gameHash = 1;
+  Token token1 = 2;
+  Token token2 = 3;
+  GameStatus gameStatus = 4;
+  int64 lastUpdate = 5;
+}
+
+message DiskStatus{
+  int64 lastUpdate = 5;
+  Vector2D force = 2;
+  float speed = 3;
 }
 
 message UserInput{
-    Vector2D vector=1;
-    Token token=2;
+  optional Vector2D vector = 1;
+  Token token = 2;
+  optional DiskStatus diskStatus = 3;
 }
 
 message GameStatus{
-    Vector2D player1=1;
-    Vector2D player2=2;
-    Vector2D disk=3;
-    Vector2D diskDirection=4;
+  Vector2D player1 = 1;
+  Vector2D player2 = 2;
+  DiskStatus disk=3;
 }
 
 
 service PositionService{
-    rpc RequestGame(GameRequest) returns (Token){};
+  rpc RequestGame(GameRequest) returns (Token){};
 
-    rpc UpdateStatus(stream UserInput) returns (stream Game) {};
+  rpc UpdateStatus(stream UserInput) returns (stream Game) {};
 }

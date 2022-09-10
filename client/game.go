@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"math"
+	"time"
 
 	"github.com/MangioneAndrea/airhockey/client/geometry/figures"
 	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
@@ -31,6 +32,7 @@ var (
 	divider      = figures.NewRectangle(figures.NewPoint(0, screenHeight/2-2), screenWidth, 4)
 	contours     = figures.NewRectangle(figures.NewPoint(1, 1), screenWidth-2, screenHeight-2)
 	updateStatus gamepb.PositionService_UpdateStatusClient
+	lastUpdate   int64 = 0
 )
 
 type Game struct {
@@ -48,8 +50,8 @@ func (g *Game) Tick() error {
 	}
 	player.Rotation += 1 / delta
 	player.Move(&vectors.Vector2D{
-		X: math.Min((math.Max(float64(cursorX), 0)), screenWidth),
-		Y: math.Min((math.Max(float64(cursorY), 0)), screenHeight),
+		X: math.Min(math.Max(float64(cursorX), 0), screenWidth),
+		Y: math.Min((math.Max(float64(cursorY), screenHeight/2)), screenHeight),
 	})
 
 	err := updateStatus.Send(&gamepb.UserInput{
@@ -57,11 +59,29 @@ func (g *Game) Tick() error {
 		Token:  g.token,
 	})
 	_, firstIntersection := player.Intersects(ball.Sprite.Hitbox)
-	if firstIntersection {
-		ball.AddForce(ball.Sprite.Hitbox.Center.Vector.Minus(player.Hitbox.Center.Vector), player.Speed)
-	}
 	if err != nil {
 		fmt.Printf("Error while sending %v\n", err)
+	}
+	if firstIntersection {
+		ball.AddForce(ball.Sprite.Hitbox.Center.Vector.Minus(player.Hitbox.Center.Vector), player.Speed)
+
+		err = updateStatus.Send(&gamepb.UserInput{
+			DiskStatus: &gamepb.DiskStatus{
+				LastUpdate: time.Now().Unix(),
+				Force:      &gamepb.Vector2D{X: int32(ball.Direction.X), Y: int32(ball.Direction.Y)},
+				Speed:      float32(ball.Sprite.Speed),
+			},
+			Token: g.token,
+		})
+
+		if ClientDebug {
+			fmt.Println("sending disk position to server")
+		}
+
+		if err != nil {
+			fmt.Printf("Error while sending %v\n", err)
+		}
+
 	}
 
 	ball.Tick()
@@ -108,6 +128,25 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 				opponent.Hitbox.Center.X = float64(res.GameStatus.Player1.X)
 				opponent.Hitbox.Center.Y = float64(res.GameStatus.Player1.Y)
 			}
+
+			if res.GameStatus.Disk != nil && res.GameStatus.Disk.LastUpdate != lastUpdate {
+				lastUpdate = res.GameStatus.Disk.LastUpdate
+
+				if ClientDebug {
+					fmt.Println("receiving disk update from server")
+				}
+
+				force := &vectors.Vector2D{X: float64(res.GameStatus.Disk.Force.X), Y: float64(res.GameStatus.Disk.Force.Y)}
+
+				if res.Token1.PlayerHash != g.token.PlayerHash {
+					force = force.Times(-1)
+				}
+
+				//ball.Sprite.Hitbox.Center = figures.NewPoint(float64(res.GameStatus.Disk.Position.X), float64(res.GameStatus.Disk.Position.Y))
+				ball.AddForce(
+					force,
+					float64(res.GameStatus.Disk.Speed))
+			}
 		}
 	}()
 
@@ -132,12 +171,12 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 		),
 	}
 	ball = PhisicSprite{Sprite: &Sprite{
-		Hitbox:                  figures.NewCircle(figures.NewPoint(float64(screenWidth)/2, float64(screenHeight)/1.3), 15),
+		Hitbox:                  figures.NewCircle(figures.NewPoint(float64(screenWidth)/2, float64(screenHeight)/2), 15),
 		Image:                   goo,
 		RegisteredIntersections: make(map[figures.Figure]bool),
 	},
 		Direction:  &vectors.Vector2D{X: float64(screenWidth) / 2, Y: float64(screenHeight) / 1.3},
-		Collisions: &[]figures.Figure{bot, right, top, left, player.Hitbox, opponent.Hitbox},
+		Collisions: &[]figures.Figure{bot, right, top, left, player.Hitbox},
 	}
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Airhockey go!")

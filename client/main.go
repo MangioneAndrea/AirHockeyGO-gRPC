@@ -17,7 +17,7 @@ const (
 
 var (
 	connection  gamepb.PositionServiceClient
-	ClientDebug = false
+	ClientDebug = true
 )
 
 type Actor interface {

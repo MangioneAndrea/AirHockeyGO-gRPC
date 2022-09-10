@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	Util "github.com/MangioneAndrea/GoUtils"
+	"github.com/MangioneAndrea/gonsole"
 	"io"
 	"log"
 	"net"
@@ -56,7 +56,7 @@ func main() {
 			for key, element := range server.games {
 				printDebug("Time elapsed %v \n", time.Since(time.Unix((element.LastUpdate), 0)))
 				if time.Since(time.Unix((element.LastUpdate), 0)) > 5*time.Second {
-					Util.PrintErrorIfNotNil(key, "Removing game due to inactivity")
+					gonsole.Error(key, "Removing game due to inactivity")
 					delete(server.games, key)
 				}
 			}
@@ -85,11 +85,11 @@ func (server *Server) RequestGame(ctx context.Context, v *gamepb.GameRequest) (*
 			GameHash:   game.GameHash,
 		}
 		server.games[game.GameHash] = game
-		Util.PrintSuccessIfNotNil(game.Token2.GameHash, "Joining game")
+		gonsole.Success(game.Token2.GameHash, "Joining game", gonsole.ShowIfNotNil)
 		return game.Token2, nil
 	} else {
 		token := server.CreateGame().Token1
-		Util.PrintSuccessIfNotNil(token.GameHash, "Creating game")
+		gonsole.Success(token.GameHash, "Creating game", gonsole.ShowIfNotNil)
 		return token, nil
 	}
 }
@@ -131,7 +131,7 @@ func (server *Server) UpdateStatus(stream gamepb.PositionService_UpdateStatusSer
 				}
 			}
 			err := stream.Send(game)
-			Util.PrintErrorIfNotNil(err)
+			gonsole.Error(err, "Stream.send", gonsole.ShowIfNotNil)
 		}
 	}
 	return nil

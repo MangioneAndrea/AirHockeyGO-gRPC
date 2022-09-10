@@ -3,11 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/MangioneAndrea/gonsole"
 	"image/color"
 	"io"
-	"log"
 	"math"
-	"sync"
 	"time"
 
 	"github.com/MangioneAndrea/airhockey/client/geometry/figures"
@@ -16,13 +15,6 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-)
-
-type GameMode int
-
-const (
-	SinglePlayer GameMode = iota
-	MultiPlayer  GameMode = iota
 )
 
 var (
@@ -34,7 +26,6 @@ var (
 	contours     = figures.NewRectangle(figures.NewPoint(1, 1), screenWidth-2, screenHeight-2)
 	updateStatus gamepb.PositionService_UpdateStatusClient
 	lastUpdate   int64 = 0
-	mutex        sync.Mutex
 )
 
 type Game struct {
@@ -81,7 +72,7 @@ func (g *Game) Tick() error {
 	err := updateStatus.Send(update)
 
 	if err != nil {
-		fmt.Printf("Error while sending %v\n", err)
+		gonsole.Error(err, "stream.send")
 	}
 	ball.Tick()
 	return nil
@@ -107,19 +98,19 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 
 	stream, streamErr := connection.UpdateStatus(context.Background())
 	if streamErr != nil {
-		log.Fatal(streamErr)
+		gonsole.Error(streamErr, "UpdateStatus")
 	}
 	updateStatus = stream
 
 	go func() {
 		for {
 			res, err := stream.Recv()
-			mutex.Lock()
 			if err != nil {
 				if err == io.EOF {
 					break
 				}
-				log.Fatalf("Error while receiving %v", err)
+				gonsole.Error(err, "Error while receiving")
+				continue
 			}
 			if res.Token1.PlayerHash == g.token.PlayerHash {
 				opponent.Hitbox.Center.X = float64(res.GameStatus.Player2.X)
@@ -153,7 +144,6 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 					force,
 					float64(res.GameStatus.Disk.Speed))
 			}
-			mutex.Unlock()
 		}
 	}()
 

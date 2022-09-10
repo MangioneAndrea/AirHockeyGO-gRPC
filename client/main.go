@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/MangioneAndrea/gonsole"
 	"log"
 
 	"github.com/MangioneAndrea/airhockey/gamepb"
@@ -44,7 +45,7 @@ func (g *GUI) Update() error {
 		return nil
 	}
 	if err := g.stage.Tick(); err != nil {
-		println(err.Error())
+		gonsole.Error(err)
 	}
 	return nil
 }

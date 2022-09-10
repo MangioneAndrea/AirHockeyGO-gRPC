@@ -2,10 +2,9 @@ package main
 
 import (
 	"context"
-	"log"
-
 	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
 	"github.com/MangioneAndrea/airhockey/gamepb"
+	"github.com/MangioneAndrea/gonsole"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -28,13 +27,13 @@ func (g *MainMenu) Draw(screen *ebiten.Image) {
 func (g *MainMenu) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error {
 	buttonImage, err := GetImageFromFilePath("client/graphics/button/idle.png")
 	if err != nil {
-		log.Fatal(err)
+		gonsole.Error(err)
 	}
 	button = &Button{
 		Position: vectors.Vector2D{X: float64(screenWidth / 2), Y: float64(screenHeight) / 1.3}, Image: buttonImage, OnClick: func() {
 			token, err := connection.RequestGame(context.Background(), &gamepb.GameRequest{})
 			if err != nil {
-				log.Fatal(err)
+				gonsole.Error(err)
 			}
 
 			gui.ChangeStage(&Game{token})

@@ -125,9 +125,10 @@ func (server *Server) UpdateStatus(stream gamepb.PositionService_UpdateStatusSer
 				if msg.Token.PlayerHash == game.Token2.PlayerHash {
 					game.GameStatus.Disk.Force.Y = -game.GameStatus.Disk.Force.Y
 					game.GameStatus.Disk.Force.X = -game.GameStatus.Disk.Force.X
+
+					game.GameStatus.Disk.Position.X = 600 - game.GameStatus.Disk.Position.X
+					game.GameStatus.Disk.Position.Y = 1200 - game.GameStatus.Disk.Position.Y
 				}
-				game.GameStatus.Disk = msg.DiskStatus
-				fmt.Println("seinding disk position")
 			}
 			err := stream.Send(game)
 			Util.PrintErrorIfNotNil(err)

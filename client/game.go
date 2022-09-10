@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/MangioneAndrea/airhockey/client/geometry/figures"
@@ -33,6 +34,7 @@ var (
 	contours     = figures.NewRectangle(figures.NewPoint(1, 1), screenWidth-2, screenHeight-2)
 	updateStatus gamepb.PositionService_UpdateStatusClient
 	lastUpdate   int64 = 0
+	mutex        sync.Mutex
 )
 
 type Game struct {
@@ -54,36 +56,33 @@ func (g *Game) Tick() error {
 		Y: math.Min((math.Max(float64(cursorY), screenHeight/2)), screenHeight),
 	})
 
-	err := updateStatus.Send(&gamepb.UserInput{
+	update := &gamepb.UserInput{
 		Vector: &gamepb.Vector2D{X: int32(player.Hitbox.Center.X), Y: int32(player.Hitbox.Center.Y)},
 		Token:  g.token,
-	})
-	_, firstIntersection := player.Intersects(ball.Sprite.Hitbox)
-	if err != nil {
-		fmt.Printf("Error while sending %v\n", err)
 	}
+
+	_, firstIntersection := player.Intersects(ball.Sprite.Hitbox)
 	if firstIntersection {
 		ball.AddForce(ball.Sprite.Hitbox.Center.Vector.Minus(player.Hitbox.Center.Vector), player.Speed)
 
-		err = updateStatus.Send(&gamepb.UserInput{
-			DiskStatus: &gamepb.DiskStatus{
-				LastUpdate: time.Now().Unix(),
-				Force:      &gamepb.Vector2D{X: int32(ball.Direction.X), Y: int32(ball.Direction.Y)},
-				Speed:      float32(ball.Sprite.Speed),
-			},
-			Token: g.token,
-		})
+		update.DiskStatus = &gamepb.DiskStatus{
+			Position:   &gamepb.Vector2D{X: int32(ball.Sprite.Hitbox.Center.X), Y: int32(ball.Sprite.Hitbox.Center.Y)},
+			LastUpdate: time.Now().Unix(),
+			Force:      &gamepb.Vector2D{X: int32(ball.Direction.X), Y: int32(ball.Direction.Y)},
+			Speed:      float32(ball.Sprite.Speed),
+		}
 
 		if ClientDebug {
 			fmt.Println("sending disk position to server")
 		}
 
-		if err != nil {
-			fmt.Printf("Error while sending %v\n", err)
-		}
-
 	}
 
+	err := updateStatus.Send(update)
+
+	if err != nil {
+		fmt.Printf("Error while sending %v\n", err)
+	}
 	ball.Tick()
 	return nil
 }
@@ -115,6 +114,7 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 	go func() {
 		for {
 			res, err := stream.Recv()
+			mutex.Lock()
 			if err != nil {
 				if err == io.EOF {
 					break
@@ -142,11 +142,18 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 					force = force.Times(-1)
 				}
 
-				//ball.Sprite.Hitbox.Center = figures.NewPoint(float64(res.GameStatus.Disk.Position.X), float64(res.GameStatus.Disk.Position.Y))
+				position := &vectors.Vector2D{X: float64(res.GameStatus.Disk.Position.X), Y: float64(res.GameStatus.Disk.Position.Y)}
+
+				if res.Token1.PlayerHash != g.token.PlayerHash {
+					position = &vectors.Vector2D{X: float64(screenWidth) - float64(res.GameStatus.Disk.Position.X), Y: float64(screenHeight) - float64(res.GameStatus.Disk.Position.Y)}
+				}
+
+				ball.Sprite.Hitbox.Center = figures.NewPoint2(position)
 				ball.AddForce(
 					force,
 					float64(res.GameStatus.Disk.Speed))
 			}
+			mutex.Unlock()
 		}
 	}()
 

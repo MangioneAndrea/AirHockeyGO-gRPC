@@ -27,9 +27,10 @@ message Game{
 }
 
 message DiskStatus{
-  int64 lastUpdate = 5;
+  Vector2D position = 1;
   Vector2D force = 2;
   float speed = 3;
+  int64 lastUpdate = 4;
 }
 
 message UserInput{

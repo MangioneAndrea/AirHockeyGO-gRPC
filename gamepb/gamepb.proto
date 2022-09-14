@@ -42,7 +42,7 @@ message UserInput{
 message GameStatus{
   Vector2D player1 = 1;
   Vector2D player2 = 2;
-  DiskStatus disk=3;
+  optional DiskStatus disk=3;
 }
 
 

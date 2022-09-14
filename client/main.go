@@ -40,6 +40,10 @@ func (g *GUI) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyF6) {
 		ClientDebug = !ClientDebug
 	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+		g.ChangeStage(&MainMenu{})
+	}
+
 	delta := ebiten.CurrentTPS() / 60
 	if delta == 0 {
 		return nil

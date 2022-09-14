@@ -2,6 +2,8 @@
 
 Simple standalone app of airhockey fully implemented in go and gRPC using ebiten
 
+<img src="./final.gif" alt="network"  height="400"/>
+
 # Setup
 ## Requirements
 - Go 1.16 or newer

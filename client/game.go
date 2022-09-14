@@ -110,7 +110,8 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 					break
 				}
 				gonsole.Error(err, "Error while receiving")
-				continue
+				defer g.OnConstruction(screenWidth, screenHeight, gui)
+				return
 			}
 			if res.Token1.PlayerHash == g.token.PlayerHash {
 				opponent.Hitbox.Center.X = float64(res.GameStatus.Player2.X)

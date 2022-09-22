@@ -123,3 +123,9 @@ func (line *Line) NearestPointTo(point *Point) *Point {
 	p := line.Start.Vector.Plus(normDir.Times(dotp))
 	return NewPoint(p.X, p.Y)
 }
+
+func (line *Line) GetAnchor() *Point { return line.Start }
+
+func (line *Line) SetAnchor(p *Point) {
+	line.Start = p
+}

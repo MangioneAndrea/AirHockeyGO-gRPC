@@ -1,6 +1,7 @@
 package figures
 
 import (
+	"github.com/hajimehoshi/ebiten/v2"
 	"math"
 )
 
@@ -76,4 +77,14 @@ func (segment *Segment) YIntercept() float64 {
 func (segment *Segment) ToLine() *Line {
 	return NewLine(segment.Start, segment.End)
 	//return &Line{Start: segment.Start, Direction: segment.End, slope: segment.slope, yIntercept: segment.yIntercept}
+}
+
+func (segment *Segment) Draw(screen *ebiten.Image) {
+
+}
+
+func (segment *Segment) GetAnchor() *Point { return segment.Start }
+
+func (segment *Segment) SetAnchor(p *Point) {
+	segment.Start = p
 }

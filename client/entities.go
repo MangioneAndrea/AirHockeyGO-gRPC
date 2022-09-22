@@ -26,7 +26,7 @@ type Intersectable interface {
 }
 
 type Sprite struct {
-	Hitbox                  *figures.Circle
+	Hitbox                  figures.Figure
 	Speed                   float64
 	Rotation                float64
 	Image                   *ebiten.Image
@@ -75,7 +75,7 @@ func (phisicSprite *PhisicSprite) Tick() {
 	}
 
 	phisicSprite.Move(
-		phisicSprite.Sprite.Hitbox.Center.Vector.Plus(
+		phisicSprite.Sprite.Hitbox.GetAnchor().Vector.Plus(
 			phisicSprite.Direction.Times(phisicSprite.Sprite.Speed / 100),
 		))
 }
@@ -94,12 +94,12 @@ func (phisicSprite *PhisicSprite) AddForce(force *vectors.Vector2D, speed float6
 	phisicSprite.Sprite.Speed = speed
 }
 func (phisicSprite *PhisicSprite) Move(where *vectors.Vector2D) {
-	phisicSprite.Sprite.Hitbox.Center = figures.NewPoint2(where)
+	(phisicSprite.Sprite.Hitbox).SetAnchor(figures.NewPoint2(where))
 }
 
 func (phisicSprite *PhisicSprite) Draw(screen *ebiten.Image) {
 	if ClientDebug {
-		phisicSprite.Sprite.Hitbox.Draw(screen)
+		(phisicSprite.Sprite.Hitbox).Draw(screen)
 	}
 	if phisicSprite.Sprite.Image == nil {
 		return
@@ -108,7 +108,7 @@ func (phisicSprite *PhisicSprite) Draw(screen *ebiten.Image) {
 }
 
 func (sprite *Sprite) Intersects(with figures.Figure) (intersects, isFirstIntersection bool) {
-	intersects = sprite.Hitbox.Intersects(with)
+	intersects = (sprite.Hitbox).Intersects(with)
 	if intersects && !sprite.isIntersectionRegistered(with) {
 		if ClientDebug {
 			fmt.Println("registering intersection")
@@ -134,18 +134,21 @@ func (sprite *Sprite) isIntersectionRegistered(with figures.Figure) bool {
 }
 
 func (sprite *Sprite) Move(where *vectors.Vector2D) {
-	sprite.Speed = math.Abs(sprite.Hitbox.Center.Vector.DistanceTo(where))
-	sprite.Hitbox.Center = figures.NewPoint2(where)
+	sprite.Speed = math.Abs((sprite.Hitbox).GetAnchor().Vector.DistanceTo(where))
+	(sprite.Hitbox).SetAnchor(figures.NewPoint2(where))
 }
 
 func (sprite *Sprite) Draw(screen *ebiten.Image) {
 	if ClientDebug {
-		sprite.Hitbox.Draw(screen)
+		(sprite.Hitbox).Draw(screen)
+	}
+	if sprite.Image == nil {
+		return
 	}
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(-float64(sprite.Image.Bounds().Size().X)/2, -float64(sprite.Image.Bounds().Size().X)/2)
 	op.GeoM.Rotate(float64(int(sprite.Rotation)%360) * 2 * math.Pi / 360)
-	op.GeoM.Translate(float64(sprite.Hitbox.Center.X), float64(sprite.Hitbox.Center.Y))
+	op.GeoM.Translate(float64((sprite.Hitbox).GetAnchor().X), float64((sprite.Hitbox).GetAnchor().Y))
 	screen.DrawImage(sprite.Image, op)
 }
 

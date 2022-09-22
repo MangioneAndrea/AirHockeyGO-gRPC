@@ -92,3 +92,9 @@ func (circle *Circle) Draw(screen *ebiten.Image) {
 			color.White)
 	}
 }
+
+func (circle *Circle) GetAnchor() *Point { return circle.Center }
+
+func (circle *Circle) SetAnchor(p *Point) {
+	circle.Center = p
+}

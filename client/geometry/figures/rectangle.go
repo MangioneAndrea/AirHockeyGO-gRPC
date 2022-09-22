@@ -87,3 +87,9 @@ func (rectangle *Rectangle) Draw(screen *ebiten.Image) {
 	ebitenutil.DrawLine(screen, top.Start.X, top.Start.Y, top.End.X, top.End.Y, rectangle.Color)
 	ebitenutil.DrawLine(screen, left.Start.X, left.Start.Y, left.End.X, left.End.Y, rectangle.Color)
 }
+
+func (rectangle *Rectangle) GetAnchor() *Point { return rectangle.Start }
+
+func (rectangle *Rectangle) SetAnchor(p *Point) {
+	rectangle.Start = p
+}

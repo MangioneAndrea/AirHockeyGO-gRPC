@@ -1,6 +1,7 @@
 package figures
 
 import (
+	"github.com/hajimehoshi/ebiten/v2"
 	"math"
 
 	"github.com/MangioneAndrea/airhockey/client/geometry/vectors"
@@ -66,4 +67,14 @@ func (point *Point) LineTo(other *Point) *Line {
 }
 func (point *Point) SegmentTo(other *Point) *Segment {
 	return NewSegment(point, other, "")
+}
+
+func (point *Point) Draw(screen *ebiten.Image) {
+
+}
+
+func (point *Point) GetAnchor() *Point { return point }
+
+func (point *Point) SetAnchor(p *Point) {
+	point = p
 }

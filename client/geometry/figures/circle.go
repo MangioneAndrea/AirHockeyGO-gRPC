@@ -43,18 +43,19 @@ func (circle *Circle) Intersects(elem Figure) bool {
 		// The distance is less than a square contained by the circle or pitagora's
 		return d.X+d.Y <= circle.Radius || d.SquaredSize() <= math.Pow(circle.Radius, 2)
 	case *Rectangle:
+		// The center of the circle is inside the rectangle
+		if other.Intersects(circle.Center) {
+			return true
+		}
 		// Get the distance between the center of the circle and the center of the rectangle
 		d := other.Start.Vector.Plus(other.End.Vector).Times(0.5).Minus(circle.Center.Vector).Abs()
 		// The distance is bigger than the radius and half the length/height of the rectangle
 		if d.X > other.Width/2+circle.Radius || d.Y > other.Height/2+circle.Radius {
 			return false
 		}
-		// The center of the circle is inside the rectangle
-		if other.Intersects(circle.Center) {
-			return true
-		}
 		// The distance may overlap the corners of the rectangle (pitagoras)
-		return math.Pow(d.X-other.Width/2, 2)+math.Pow(d.Y-other.Height/2, 2) <= math.Pow(circle.Radius, 2)
+		res := math.Pow(d.X-other.Width/2, 2)+math.Pow(d.Y-other.Height/2, 2) <= math.Pow(circle.Radius, 2)
+		return res
 	case *Segment:
 		p := other.ToLine().NearestPointTo(circle.Center)
 		// If the point is not in the segment, take the nearest end

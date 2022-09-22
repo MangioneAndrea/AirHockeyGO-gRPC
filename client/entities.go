@@ -31,6 +31,7 @@ type Sprite struct {
 	Rotation                float64
 	Image                   *ebiten.Image
 	RegisteredIntersections map[figures.Figure]bool
+	IntersectionsCallbacks  map[figures.Figure]func()
 }
 
 type PhisicSprite struct {
@@ -115,6 +116,9 @@ func (sprite *Sprite) Intersects(with figures.Figure) (intersects, isFirstInters
 		}
 		sprite.RegisteredIntersections[with] = true
 		isFirstIntersection = true
+		if sprite.IntersectionsCallbacks != nil && sprite.IntersectionsCallbacks[with] != nil {
+			sprite.IntersectionsCallbacks[with]()
+		}
 	}
 	if !intersects && sprite.isIntersectionRegistered(with) {
 		if ClientDebug {

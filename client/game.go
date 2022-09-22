@@ -181,9 +181,17 @@ func (g *Game) OnConstruction(screenWidth int, screenHeight int, gui *GUI) error
 		Hitbox:                  figures.NewCircle(figures.NewPoint(float64(screenWidth)/2, float64(screenHeight)/2), 15),
 		Image:                   goo,
 		RegisteredIntersections: make(map[figures.Figure]bool),
+		IntersectionsCallbacks: map[figures.Figure]func(){
+			goal1.Hitbox: func() {
+				fmt.Println("goal 1")
+			},
+			goal2.Hitbox: func() {
+				fmt.Println("goal 2")
+			},
+		},
 	},
 		Direction:  &vectors.Vector2D{X: float64(screenWidth) / 2, Y: float64(screenHeight) / 1.3},
-		Collisions: &[]figures.Figure{bot, right, top, left, player.Hitbox},
+		Collisions: &[]figures.Figure{bot, right, top, left, player.Hitbox, goal1.Hitbox, goal2.Hitbox},
 	}
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
